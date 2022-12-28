@@ -1,0 +1,4084 @@
+--[[VARIABLE DEFINITION ANOMALY DETECTED, DECOMPILATION OUTPUT POTENTIALLY INCORRECT]]--
+--[[VARIABLE DEFINITION ANOMALY DETECTED, DECOMPILATION OUTPUT POTENTIALLY INCORRECT]]--
+--[[VARIABLE DEFINITION ANOMALY DETECTED, DECOMPILATION OUTPUT POTENTIALLY INCORRECT]]--
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+fps_mt = {
+	__index = v1
+};
+local l__Lighting__2 = game.Lighting;
+local l__PhysicsService__3 = game:GetService("PhysicsService");
+local l__RunService__4 = game:GetService("RunService");
+local l__Debris__5 = game:GetService("Debris");
+local l__GameSettings__6 = UserSettings().GameSettings;
+local l__Skins__7 = game.ReplicatedStorage:WaitForChild("Skins");
+local l__Remotes__8 = game.ReplicatedStorage:WaitForChild("Remotes");
+local l__rrrorLog__9 = game.ReplicatedStorage.Remotes:FindFirstChild("\208\149rrrorLog");
+local l__Modules__10 = game.ReplicatedStorage:WaitForChild("Modules");
+local v11 = RaycastParams.new();
+v11.FilterType = Enum.RaycastFilterType.Blacklist;
+v11.CollisionGroup = "WeaponRay";
+v11.IgnoreWater = true;
+local l__ViewModelClothing__1 = game.ReplicatedStorage:WaitForChild("ViewModelClothing");
+local u2 = require(l__Modules__10:WaitForChild("FunctionLibraryExtension"));
+local l__ViewModels__3 = game.ReplicatedStorage:WaitForChild("ViewModels");
+local function u4(p1, p2)
+	local v12 = p2:GetChildren();
+	for v13 = 1, #v12 do
+		if v12[v13].ClassName == "Model" and v12[v13]:GetAttribute("ItemType") then
+			v12[v13]:Destroy();
+		end;
+	end;
+	local v14 = game.ReplicatedStorage.Players:FindFirstChild(p1.player.Name).Clothing:GetChildren();
+	for v15 = 1, #v14 do
+		if v14[v15]:FindFirstChild("ItemProperties") and l__ViewModelClothing__1:FindFirstChild(v14[v15].Name) then
+			local v16 = l__ViewModelClothing__1:FindFirstChild(v14[v15].Name):Clone();
+			v16.Parent = p2;
+			local v17 = v16.Connections:GetChildren();
+			for v18 = 1, #v17 do
+				if v17[v18]:IsA("BasePart") then
+					local v19 = Instance.new("Weld");
+					v19.Part0 = p2:FindFirstChild(v17[v18].Name);
+					v19.Part1 = v17[v18];
+					v19.C0 = CFrame.new(0, 0, 0);
+					v19.Parent = v19.Part0;
+				end;
+			end;
+			local v20 = v16:GetChildren();
+			for v21 = 1, #v20 do
+				if v20[v21].ClassName == "Part" or v20[v21].ClassName == "UnionOperation" or v20[v21].ClassName == "MeshPart" then
+					v20[v21].Anchored = false;
+					v20[v21].CanCollide = false;
+					v20[v21].CastShadow = false;
+				end;
+			end;
+			if v14[v15].ItemProperties:GetAttribute("Skin") and v14[v15].ItemProperties:GetAttribute("Skin") ~= "" then
+				u2:SkinItem(v14[v15], v16);
+			end;
+		end;
+	end;
+end;
+local l__ToggleAttachment__5 = game.ReplicatedStorage.Remotes.ToggleAttachment;
+local l__UpdateViewmodel__6 = l__Remotes__8:WaitForChild("UpdateViewmodel");
+local function u7(p3, p4, p5)
+	if p4 ~= "" then
+		local v22 = p3.viewModel.Item.Attachments.Magazine:FindFirstChild(p4);
+		if not v22 then
+			({}).Magazine = true;
+			local v23 = p3.viewModel.Item.Attachments.Magazine:ClearAllChildren();
+			v22 = game.ReplicatedStorage.Attachments:FindFirstChild(p4):Clone();
+			v22.Parent = p3.viewModel.Item.Attachments.Magazine;
+			local v24 = Instance.new("Weld", v22.PrimaryPart);
+			v24.Name = "AttachmentWeld";
+			v24.Part0 = p3.viewModel.Item.Attachments.Magazine;
+			v24.Part1 = v22.PrimaryPart;
+			for v25, v26 in pairs((v22:GetDescendants())) do
+				if v26:IsA("BasePart") then
+					v26.CastShadow = false;
+				end;
+			end;
+		end;
+		if v22 and p5 then
+			local v27 = p5.ItemProperties:GetAttribute("LoadedAmmo");
+			if v22:FindFirstChild("Bullet1") then
+				if v27 > 0 then
+					v22.Bullet1.Transparency = 0;
+				else
+					v22.Bullet1.Transparency = 1;
+				end;
+			end;
+			if v22:FindFirstChild("Bullet2") then
+				if v27 > 1 then
+					v22.Bullet2.Transparency = 0;
+				else
+					v22.Bullet2.Transparency = 1;
+				end;
+			end;
+			if p5.ItemProperties:GetAttribute("Skin") then
+				u2:SkinItem(p5, v22);
+			end;
+		end;
+	end;
+end;
+local l__CurrentCamera__8 = game.Workspace.CurrentCamera;
+local v28 = {};
+local l__RangedWeapons__9 = game.ReplicatedStorage.RangedWeapons;
+local function u10(p6)
+	local v29 = nil;
+	if not (p6.Bullets > 0) then
+		return;
+	end;
+	p6.Bullets = p6.Bullets - 1;
+	local v30 = #p6.BulletsList;
+	if p6.BulletsList[v30].Amount > 0 then
+		local v31 = p6.BulletsList[v30].Amount - 1;
+		p6.BulletsList[v30].Amount = v31;
+		local v32 = p6.BulletsList[v30].AmmoType;
+		if not (v31 < 1) then
+			v29 = v32;
+			return v29;
+		end;
+	else
+		local v33 = p6.BulletsList[v30 - 1].Amount - 1;
+		p6.BulletsList[v30 - 1].Amount = v33;
+		v32 = p6.BulletsList[v30 - 1].AmmoType;
+		if v33 < 1 then
+			table.remove(p6.BulletsList, v30 - 1);
+		else
+			v29 = v32;
+			return v29;
+		end;
+		v29 = v32;
+		return v29;
+	end;
+	table.remove(p6.BulletsList, v30);
+	return v32;
+end;
+local u11 = require(script:WaitForChild("Bullet"));
+local l__Reload__12 = l__Remotes__8:WaitForChild("Reload");
+local l__SoundServiceEvent__13 = l__Remotes__8:WaitForChild("SoundServiceEvent");
+function v28.RangedWeaponDefault(p7)
+	if not p7.clientAnimationTracks.Equip or not p7.clientAnimationTracks.Equip.IsPlaying or p7.clientAnimationTracks.Equip.Length * 0.8 < p7.clientAnimationTracks.Equip.TimePosition then
+		if p7.FireRate < p7.timeNow then
+			p7.timeNow = 0;
+			if p7.useDebounce == false and p7.isEquipped and p7.reloading == false and p7.Bullets > 0 then
+				if p7.weapon.ItemProperties:GetAttribute("Durability") then
+					local v34 = not (p7.weapon.ItemProperties:GetAttribute("Durability") <= 0);
+				else
+					v34 = true;
+				end;
+				if v34 and p7.Operational then
+					if p7.clientAnimationTracks.Use then
+						p7.clientAnimationTracks.Use:Stop(0);
+					end;
+					p7.sprinting = false;
+					p7.rs_Player.Status.GameplayVariables.Sprinting:SetAttribute("Value", p7.sprinting);
+					local v35 = l__RangedWeapons__9:FindFirstChild(p7.weapon.Name);
+					local l__ItemProperties__36 = p7.weapon.ItemProperties;
+					p7.timeSinceUse = 0;
+					p7.RecoilPatternPos = math.clamp(p7.RecoilPatternPos + 1, 0, p7.MaxAmmo);
+					local v37 = u10(p7);
+					local v38, v39, v40, v41 = u11:CreateBullet(p7.weapon, p7.WeldedTool, p7.viewModel, p7.ToolStance, v37, p7.lastUseTime, p7.RecoilPatternPos, p7.aimPart);
+					p7.RecoilTiltHorizontal.target = p7.RecoilTiltHorizontal.target + Vector3.new(v41.x.Value * v38 / 7, v41.y.Value * v38 / 7, 0) + Vector3.new(math.random(-7, 7) * v38, math.random(-2, 4) * v39, 0) / 240;
+					if p7.FireModes[p7.FireModeIndex] == "Bolt Action" then
+						p7.useDebounce = true;
+					else
+						coroutine.wrap(function()
+							if p7.settings.EjectionDelay then
+								wait(p7.settings.EjectionDelay);
+							end;
+							if p7.viewModel == p7.viewModel and p7.viewModel.Parent then
+								local l__EjectionPort__42 = p7.viewModel.Item:FindFirstChild("EjectionPort");
+								if l__EjectionPort__42 then
+									if v37 then
+										local v43 = game.ReplicatedStorage.AmmoTypes:FindFirstChild(v37);
+										if v43:FindFirstChild("Casing") then
+											l__EjectionPort__42.Casing.Texture = v43.Casing.Texture;
+										end;
+									end;
+									l__EjectionPort__42.Casing:Emit(1);
+								end;
+							end;
+						end)();
+					end;
+					local v44 = game.ReplicatedStorage.AmmoTypes:FindFirstChild(v37);
+					local v45 = v44:GetAttribute("Shotgun");
+					local v46 = v44:GetAttribute("Damage");
+					if not v44:GetAttribute("Arrow") then
+						if v40 == "Suppressor" then
+							local v47 = 2;
+						else
+							v47 = 1;
+						end;
+						if v45 then
+							if v40 == "Suppressor" then
+								local v48 = 4;
+							else
+								v48 = 8;
+							end;
+							v47 = v48;
+						elseif v46 > 65 then
+							if v40 == "Suppressor" then
+								local v49 = 5;
+							else
+								v49 = 10;
+							end;
+							v47 = v49;
+						end;
+						p7.firedInRow = p7.firedInRow + v47;
+					end;
+					if p7.clientAnimationTracks.Use then
+						p7.clientAnimationTracks.Use:Play(0.1);
+					end;
+					if p7.isAiming then
+						if p7.serverAnimationTracks.Use then
+							p7.serverAnimationTracks.UseAiming:Play(0.1);
+						end;
+					elseif p7.serverAnimationTracks.Use then
+						p7.serverAnimationTracks.Use:Play(0.1);
+					end;
+					if p7.Bullets <= 2 and p7.viewModel.Item:FindFirstChild("Attachments") and p7.viewModel.Item.Attachments:FindFirstChild("Magazine") then
+						local v50 = p7.viewModel.Item.Attachments.Magazine:GetChildren()[1];
+						if v50 then
+							local l__Bullets__51 = p7.Bullets;
+							if v50:FindFirstChild("Bullet1") then
+								if l__Bullets__51 > 0 then
+									v50.Bullet1.Transparency = 0;
+								else
+									v50.Bullet1.Transparency = 1;
+								end;
+							end;
+							if v50:FindFirstChild("Bullet2") then
+								if l__Bullets__51 > 1 then
+									v50.Bullet2.Transparency = 0;
+								else
+									v50.Bullet2.Transparency = 1;
+								end;
+							end;
+						end;
+					end;
+					if p7.Bullets == 0 then
+						if p7.clientAnimationTracks.BoltLock then
+							p7.clientAnimationTracks.BoltLock:Play(0);
+						end;
+						if p7.clientAnimationTracks.Empty then
+							p7.clientAnimationTracks.Empty:Play(0);
+						end;
+						if p7.clientAnimationTracks.BoltOpen then
+							p7.clientAnimationTracks.BoltOpen:Stop();
+						end;
+					end;
+				elseif p7.isEquipped and p7.Bullets > 0 and p7.reloading and p7.reloadType == "loadByHand" and p7.MaxAmmo > 1 then
+					p7.cancellingReload = true;
+					local v52 = l__Reload__12:InvokeServer(p7.weapon, 30, true);
+				elseif p7.useDebounce == false and p7.reloading == false then
+					p7.MouseHeld = false;
+					l__SoundServiceEvent__13:FireServer(p7.WeldedTool.ItemRoot.Empty);
+					u2:PlaySoundV2(p7.WeldedTool.ItemRoot.Empty, nil, p7.SoundsTemp);
+					if p7.clientAnimationTracks.BoltOpen then
+						if p7.clientAnimationTracks.Empty then
+							p7.clientAnimationTracks.Empty:Play();
+						end;
+						if p7.clientAnimationTracks.BoltOpen then
+							p7.clientAnimationTracks.BoltOpen:Stop();
+						end;
+					end;
+					if p7.clientAnimationTracks.HammerLock and (not p7.clientAnimationTracks.BoltLock or p7.clientAnimationTracks.BoltLock and not p7.clientAnimationTracks.BoltLock.IsPlaying) then
+						p7.clientAnimationTracks.HammerLock:Play(0.1);
+					end;
+				end;
+			elseif p7.isEquipped and p7.Bullets > 0 and p7.reloading and p7.reloadType == "loadByHand" and p7.MaxAmmo > 1 then
+				p7.cancellingReload = true;
+				v52 = l__Reload__12:InvokeServer(p7.weapon, 30, true);
+			elseif p7.useDebounce == false and p7.reloading == false then
+				p7.MouseHeld = false;
+				l__SoundServiceEvent__13:FireServer(p7.WeldedTool.ItemRoot.Empty);
+				u2:PlaySoundV2(p7.WeldedTool.ItemRoot.Empty, nil, p7.SoundsTemp);
+				if p7.clientAnimationTracks.BoltOpen then
+					if p7.clientAnimationTracks.Empty then
+						p7.clientAnimationTracks.Empty:Play();
+					end;
+					if p7.clientAnimationTracks.BoltOpen then
+						p7.clientAnimationTracks.BoltOpen:Stop();
+					end;
+				end;
+				if p7.clientAnimationTracks.HammerLock and (not p7.clientAnimationTracks.BoltLock or p7.clientAnimationTracks.BoltLock and not p7.clientAnimationTracks.BoltLock.IsPlaying) then
+					p7.clientAnimationTracks.HammerLock:Play(0.1);
+				end;
+			end;
+		end;
+		if p7.FireModes[p7.FireModeIndex] == "Semi" then
+			p7.MouseHeld = false;
+		end;
+	end;
+end;
+local u14 = require(script:WaitForChild("Melee"));
+function v28.MeleeWeaponDefault(p8)
+	if (not p8.clientAnimationTracks.Equip or not p8.clientAnimationTracks.Equip.IsPlaying or p8.clientAnimationTracks.Equip.Length * 0.8 < p8.clientAnimationTracks.Equip.TimePosition) and p8.useDebounce == false then
+		if p8.weapon.ItemProperties:GetAttribute("Durability") then
+			local v53 = not (p8.weapon.ItemProperties:GetAttribute("Durability") <= 0);
+		else
+			v53 = true;
+		end;
+		if v53 and p8.Operational then
+			p8.useDebounce = true;
+			p8.MouseHeld = false;
+			p8.sprinting = false;
+			p8.rs_Player.Status.GameplayVariables.Sprinting:SetAttribute("Value", p8.sprinting);
+			local l__weapon__54 = p8.weapon;
+			local l__Swing__55 = p8.WeldedTool.ItemRoot.Swing;
+			u2:PlaySoundV2(l__Swing__55, l__Swing__55.Volume, p8.SoundsTemp, l__Swing__55.TimeLength);
+			l__SoundServiceEvent__13:FireServer(l__Swing__55);
+			if p8.altUseCounter == 1 and p8.clientAnimationTracks.UseAlt then
+				p8.altUseCounter = 0;
+				local v56 = p8.clientAnimationTracks.UseAlt;
+				p8.clientAnimationTracks.UseAlt:Play(0.08);
+				p8.serverAnimationTracks.UseAlt:Play(0.08);
+				p8.clientAnimationTracks.Use:Stop();
+				p8.serverAnimationTracks.Use:Stop();
+				p8.clientAnimationTracks.Stab:Stop();
+				p8.serverAnimationTracks.Stab:Stop();
+			else
+				p8.altUseCounter = 1;
+				v56 = p8.clientAnimationTracks.Use;
+				p8.clientAnimationTracks.Use:Play(0.08);
+				p8.serverAnimationTracks.Use:Play(0.08);
+				p8.clientAnimationTracks.UseAlt:Stop();
+				p8.serverAnimationTracks.UseAlt:Stop();
+				p8.clientAnimationTracks.Stab:Stop();
+				p8.serverAnimationTracks.Stab:Stop();
+			end;
+			local u15 = nil;
+			u15 = v56:GetMarkerReachedSignal("SwingEnd"):Connect(function()
+				p8.useDebounce = false;
+				if p8.LeftMouseDown == true then
+					p8.MouseHeld = true;
+				end;
+				u15:Disconnect();
+			end);
+			local u16 = nil;
+			u16 = v56:GetMarkerReachedSignal("HitScan"):Connect(function()
+				local v57, v58 = u14:StartSwing(p8.weapon, p8.WeldedTool, p8.viewModel, "NormalAttack", p8.SprintStrafe);
+				u16:Disconnect();
+			end);
+		end;
+	end;
+end;
+function v28.MeleeWeaponThrowable(p9)
+	if p9.useDebounce == false then
+		if not p9.isAiming then
+			useTypes.MeleeWeaponDefault(p9);
+			return;
+		end;
+	else
+		return;
+	end;
+	p9.useDebounce = true;
+	p9.MouseHeld = false;
+	p9.clientAnimationTracks.AimingAnimation:Play();
+	p9.serverAnimationTracks.Extra1Animation:Play();
+	u2:PlaySoundV2(p9.WeldedTool.ItemRoot.Throw, nil, p9.SoundsTemp);
+	l__SoundServiceEvent__13:FireServer(p9.WeldedTool.ItemRoot.Throw);
+	wait(0.07);
+	(nil):FireServer(l__CurrentCamera__8.CFrame.Position + l__CurrentCamera__8.CFrame.LookVector * 1000);
+	wait(0.2);
+	p9:unequip();
+end;
+local l__ServerProjectile__17 = game.ReplicatedStorage.Remotes.ServerProjectile;
+function v28.GrenadeDefault(p10)
+	if p10.useDebounce == false and (not p10.clientAnimationTracks.Equip.IsPlaying or p10.clientAnimationTracks.Equip.Length * 0.8 < p10.clientAnimationTracks.Equip.TimePosition) then
+		p10.useDebounce = true;
+		p10.MouseHeld = false;
+		local l__weapon__59 = p10.weapon;
+		u2:PlaySoundV2(p10.WeldedTool.ItemRoot.Use, nil, p10.SoundsTemp);
+		l__SoundServiceEvent__13:FireServer(p10.WeldedTool.ItemRoot.Use);
+		if p10.clientAnimationTracks.Use then
+			p10.clientAnimationTracks.Use:Play(0.05);
+		end;
+		if p10.serverAnimationTracks.Use then
+			p10.serverAnimationTracks.Use:Play(0.05);
+		end;
+		local v60 = p10.weapon.ItemProperties:GetAttribute("Amount");
+		coroutine.wrap(function()
+			wait(p10.settings.GrenadeThrowDelay);
+			l__ServerProjectile__17:FireServer(l__CurrentCamera__8.CFrame.LookVector, true);
+		end)();
+		local v61 = tick();
+		while p10.useDebounce == true and p10.isEquipped == true do
+			wait();
+			if p10.clientAnimationTracks.Use.Length - 0.15 < tick() - v61 then
+				break;
+			end;		
+		end;
+		if l__weapon__59 == p10.weapon then
+			if v60 - 1 > 0 then
+				p10.ToolStance = "Idle";
+				p10.EquipTValue = 0;
+				if p10.serverAnimationTracks.Equip then
+					p10.serverAnimationTracks.Equip:Play(0);
+				end;
+				if p10.viewModel then
+					p10.clientAnimationTracks.Idle:Play();
+					if p10.clientAnimationTracks.Equip then
+						p10.clientAnimationTracks.Equip:Play(0);
+					end;
+					u2:PlaySoundV2(p10.WeldedTool.ItemRoot.Equip, nil, p10.SoundsTemp);
+					l__SoundServiceEvent__13:FireServer(p10.WeldedTool.ItemRoot.Equip);
+				end;
+				wait(0.35);
+				if l__weapon__59 == p10.weapon then
+					p10.useDebounce = false;
+					return;
+				end;
+			else
+				wait(0.1);
+				if l__weapon__59 == p10.weapon then
+					p10:unequip();
+				end;
+			end;
+		end;
+	end;
+end;
+function v28.FlareDefault(p11)
+	if p11.useDebounce == false and (not p11.clientAnimationTracks.Equip.IsPlaying or p11.clientAnimationTracks.Equip.Length * 0.8 < p11.clientAnimationTracks.Equip.TimePosition) then
+		p11.useDebounce = true;
+		p11.MouseHeld = false;
+		local l__weapon__62 = p11.weapon;
+		if p11.clientAnimationTracks.Use then
+			p11.clientAnimationTracks.Use:Play(0.05);
+		end;
+		if p11.serverAnimationTracks.Use then
+			p11.serverAnimationTracks.Use:Play(0.05);
+		end;
+		wait(p11.settings.GrenadeThrowDelay);
+		if l__weapon__62 == p11.weapon then
+			u2:PlaySoundV2(p11.WeldedTool.ItemRoot.Use, nil, p11.SoundsTemp);
+			l__SoundServiceEvent__13:FireServer(p11.WeldedTool.ItemRoot.Use);
+			l__ServerProjectile__17:FireServer(l__CurrentCamera__8.CFrame.LookVector, true);
+			wait(0.7);
+			if l__weapon__62 == p11.weapon then
+				p11:unequip(nil, true);
+			end;
+		end;
+	end;
+end;
+local u18 = require(script:WaitForChild("Keys"));
+function v28.KeyDefault(p12)
+	if p12.useDebounce == false then
+		p12.useDebounce = true;
+		p12.MouseHeld = false;
+		local l__weapon__63 = p12.weapon;
+		p12.clientAnimationTracks.Use:Play(0.08);
+		p12.serverAnimationTracks.Use:Play(0.08);
+		wait(0.6);
+		u18:UseKey(p12.weapon);
+		wait(1);
+		p12.useDebounce = false;
+	end;
+end;
+local l__Consume__19 = l__Remotes__8:WaitForChild("Consume");
+function v28.Consumable(p13)
+	if (not p13.clientAnimationTracks.Equip or not p13.clientAnimationTracks.Equip.IsPlaying or p13.clientAnimationTracks.Equip.Length * 0.5 < p13.clientAnimationTracks.Equip.TimePosition) and p13.useDebounce == false then
+		p13.useDebounce = true;
+		p13.MouseHeld = false;
+		local l__weapon__64 = p13.weapon;
+		u2:PlaySoundV2(p13.WeldedTool.ItemRoot.Use, nil, p13.SoundsTemp);
+		l__SoundServiceEvent__13:FireServer(p13.WeldedTool.ItemRoot.Use);
+		if p13.clientAnimationTracks.Use then
+			p13.clientAnimationTracks.Use:Play(0.08);
+		end;
+		if p13.serverAnimationTracks.Use then
+			p13.serverAnimationTracks.Use:Play(0.08);
+		end;
+		local v65 = p13.weapon.ItemProperties:GetAttribute("Amount");
+		l__Consume__19:FireServer();
+		local v66 = tick();
+		while p13.useDebounce == true and p13.isEquipped == true do
+			wait();
+			if p13.clientAnimationTracks.Use.Length - 0.15 < tick() - v66 then
+				break;
+			end;		
+		end;
+		if l__weapon__64 == p13.weapon then
+			if v65 then
+				if v65 - 1 > 0 then
+					p13.ToolStance = "Idle";
+					p13.EquipTValue = 0;
+					if p13.clientAnimationTracks.Use then
+						p13.clientAnimationTracks.Use:Stop(0);
+					end;
+					if p13.serverAnimationTracks.Use then
+						p13.serverAnimationTracks.Use:Stop(0);
+					end;
+					if p13.serverAnimationTracks.Equip then
+						p13.serverAnimationTracks.Equip:Play(0);
+					end;
+					if p13.viewModel then
+						p13.clientAnimationTracks.Idle:Play();
+						if p13.clientAnimationTracks.Equip then
+							p13.clientAnimationTracks.Equip:Play(0);
+						end;
+					end;
+					wait(0.35);
+					if l__weapon__64 == p13.weapon then
+						p13.useDebounce = false;
+						return;
+					end;
+				else
+					wait(0.1);
+					if l__weapon__64 == p13.weapon then
+						p13:unequip();
+						return;
+					end;
+				end;
+			else
+				wait(0.35);
+				if l__weapon__64 == p13.weapon then
+					p13.useDebounce = false;
+				end;
+			end;
+		end;
+	end;
+end;
+useTypes = v28;
+useTypes2 = {
+	MeleeWeaponDefault = function(p14)
+		if p14.useDebounce == false then
+			if not p14.clientAnimationTracks.Equip or not p14.clientAnimationTracks.Equip.IsPlaying or p14.clientAnimationTracks.Equip.Length * 0.8 < p14.clientAnimationTracks.Equip.TimePosition then
+				p14.useDebounce = true;
+				p14.MouseHeld = false;
+				p14.sprinting = false;
+				p14.rs_Player.Status.GameplayVariables.Sprinting:SetAttribute("Value", p14.sprinting);
+				local l__weapon__67 = p14.weapon;
+				local v68 = p14.WeldedTool.ItemRoot.Swing;
+				if p14.WeldedTool.ItemRoot:FindFirstChild("SwingPower") then
+					v68 = p14.WeldedTool.ItemRoot.SwingPower;
+				end;
+				u2:PlaySoundV2(v68, nil, p14.SoundsTemp);
+				l__SoundServiceEvent__13:FireServer(v68);
+				local l__Stab__69 = p14.clientAnimationTracks.Stab;
+				p14.clientAnimationTracks.Stab:Play(0);
+				p14.serverAnimationTracks.Stab:Play(0);
+				p14.clientAnimationTracks.Use:Stop();
+				p14.clientAnimationTracks.UseAlt:Stop();
+				p14.serverAnimationTracks.Use:Stop();
+				p14.serverAnimationTracks.UseAlt:Stop();
+				local u20 = nil;
+				u20 = l__Stab__69:GetMarkerReachedSignal("SwingEnd"):Connect(function()
+					p14.useDebounce = false;
+					if p14.LeftMouseDown == true then
+						p14.MouseHeld = true;
+					end;
+					u20:Disconnect();
+				end);
+				local u21 = nil;
+				u21 = l__Stab__69:GetMarkerReachedSignal("HitScan"):Connect(function()
+					local v70, v71 = u14:StartSwing(p14.weapon, p14.WeldedTool, p14.viewModel, "PowerAttack", p14.SprintStrafe);
+					u21:Disconnect();
+				end);
+			end;
+		end;
+	end, 
+	Lighter = function(p15)
+		if p15.useDebounce == false then
+			if p15.clientAnimationTracks.Equip then
+				if p15.clientAnimationTracks.Equip.IsPlaying then
+					if p15.clientAnimationTracks.Equip.Length * 0.8 < p15.clientAnimationTracks.Equip.TimePosition then
+						p15.useDebounce = true;
+						if p15.WeldedTool.ItemRoot:FindFirstChild("Toggle") then
+							u2:PlaySoundV2(p15.WeldedTool.ItemRoot.Toggle, nil, p15.SoundsTemp);
+							l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Toggle);
+						end;
+						local l__weapon__72 = p15.weapon;
+						if l__weapon__72 == p15.weapon then
+							local v73 = p15.character:FindFirstChild(p15.weapon.Name);
+							if v73 then
+								if v73:GetAttribute("Active") then
+									p15.serverAnimationTracks.Close:Play();
+									p15.clientAnimationTracks.Close:Play();
+									p15.serverAnimationTracks.Opened:Stop();
+									p15.clientAnimationTracks.Opened:Stop();
+									coroutine.wrap(function()
+										wait(0.1);
+										if p15.viewModel == p15.viewModel then
+											p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = false;
+											p15.viewModel.Item.Emitter.PointLight.Enabled = false;
+										end;
+									end)();
+									if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+										l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+										p15.WeldedTool.ItemRoot.Idle:Stop();
+									end;
+									l__ToggleAttachment__5:FireServer("Lighter", nil, false);
+								else
+									p15.serverAnimationTracks.Open:Play();
+									p15.clientAnimationTracks.Open:Play();
+									p15.serverAnimationTracks.Opened:Play();
+									p15.clientAnimationTracks.Opened:Play();
+									coroutine.wrap(function()
+										wait(0.35);
+										if p15.viewModel == p15.viewModel then
+											if v73:GetAttribute("Active") then
+												p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = true;
+												p15.viewModel.Item.Emitter.PointLight.Enabled = true;
+											end;
+										end;
+									end)();
+									if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+										p15.WeldedTool.ItemRoot.Idle:Play();
+										l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+									end;
+									coroutine.wrap(function()
+										local v74 = os.time();
+										while true do
+											if os.time() - v74 < 6 then
+
+											else
+												break;
+											end;
+											wait();
+											local v75 = p15.character:GetChildren();
+											local v76 = #v75;
+											local v77 = 1 - 1;
+											while true do
+												if v75[v77]:IsA("Model") then
+													if v75[v77].Name == p15.weapon.Name then
+														if v75[v77]:FindFirstChild("Emitter") then
+															v75[v77].Emitter.PointLight.Enabled = false;
+															v75[v77].Emitter.ParticleEmitter.Enabled = false;
+															break;
+														end;
+													end;
+												end;
+												if 0 <= 1 then
+													if v77 < v76 then
+
+													else
+														break;
+													end;
+												elseif v76 < v77 then
+
+												else
+													break;
+												end;
+												v77 = v77 + 1;											
+											end;										
+										end;
+									end)();
+									l__ToggleAttachment__5:FireServer("Lighter", nil, true);
+								end;
+							end;
+						end;
+						wait(0.7);
+						if l__weapon__72 == p15.weapon then
+							p15.useDebounce = false;
+						end;
+					end;
+				else
+					p15.useDebounce = true;
+					if p15.WeldedTool.ItemRoot:FindFirstChild("Toggle") then
+						u2:PlaySoundV2(p15.WeldedTool.ItemRoot.Toggle, nil, p15.SoundsTemp);
+						l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Toggle);
+					end;
+					l__weapon__72 = p15.weapon;
+					if l__weapon__72 == p15.weapon then
+						v73 = p15.character:FindFirstChild(p15.weapon.Name);
+						if v73 then
+							if v73:GetAttribute("Active") then
+								p15.serverAnimationTracks.Close:Play();
+								p15.clientAnimationTracks.Close:Play();
+								p15.serverAnimationTracks.Opened:Stop();
+								p15.clientAnimationTracks.Opened:Stop();
+								coroutine.wrap(function()
+									wait(0.1);
+									if p15.viewModel == p15.viewModel then
+										p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = false;
+										p15.viewModel.Item.Emitter.PointLight.Enabled = false;
+									end;
+								end)();
+								if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+									l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+									p15.WeldedTool.ItemRoot.Idle:Stop();
+								end;
+								l__ToggleAttachment__5:FireServer("Lighter", nil, false);
+							else
+								p15.serverAnimationTracks.Open:Play();
+								p15.clientAnimationTracks.Open:Play();
+								p15.serverAnimationTracks.Opened:Play();
+								p15.clientAnimationTracks.Opened:Play();
+								coroutine.wrap(function()
+									wait(0.35);
+									if p15.viewModel == p15.viewModel then
+										if v73:GetAttribute("Active") then
+											p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = true;
+											p15.viewModel.Item.Emitter.PointLight.Enabled = true;
+										end;
+									end;
+								end)();
+								if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+									p15.WeldedTool.ItemRoot.Idle:Play();
+									l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+								end;
+								coroutine.wrap(function()
+									v74 = os.time();
+									while true do
+										if os.time() - v74 < 6 then
+
+										else
+											break;
+										end;
+										wait();
+										v75 = p15.character:GetChildren();
+										v76 = #v75;
+										v77 = 1 - 1;
+										while true do
+											if v75[v77]:IsA("Model") then
+												if v75[v77].Name == p15.weapon.Name then
+													if v75[v77]:FindFirstChild("Emitter") then
+														v75[v77].Emitter.PointLight.Enabled = false;
+														v75[v77].Emitter.ParticleEmitter.Enabled = false;
+														break;
+													end;
+												end;
+											end;
+											if 0 <= 1 then
+												if v77 < v76 then
+
+												else
+													break;
+												end;
+											elseif v76 < v77 then
+
+											else
+												break;
+											end;
+											v77 = v77 + 1;										
+										end;									
+									end;
+								end)();
+								l__ToggleAttachment__5:FireServer("Lighter", nil, true);
+							end;
+						end;
+					end;
+					wait(0.7);
+					if l__weapon__72 == p15.weapon then
+						p15.useDebounce = false;
+					end;
+				end;
+			else
+				p15.useDebounce = true;
+				if p15.WeldedTool.ItemRoot:FindFirstChild("Toggle") then
+					u2:PlaySoundV2(p15.WeldedTool.ItemRoot.Toggle, nil, p15.SoundsTemp);
+					l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Toggle);
+				end;
+				l__weapon__72 = p15.weapon;
+				if l__weapon__72 == p15.weapon then
+					v73 = p15.character:FindFirstChild(p15.weapon.Name);
+					if v73 then
+						if v73:GetAttribute("Active") then
+							p15.serverAnimationTracks.Close:Play();
+							p15.clientAnimationTracks.Close:Play();
+							p15.serverAnimationTracks.Opened:Stop();
+							p15.clientAnimationTracks.Opened:Stop();
+							coroutine.wrap(function()
+								wait(0.1);
+								if p15.viewModel == p15.viewModel then
+									p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = false;
+									p15.viewModel.Item.Emitter.PointLight.Enabled = false;
+								end;
+							end)();
+							if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+								l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+								p15.WeldedTool.ItemRoot.Idle:Stop();
+							end;
+							l__ToggleAttachment__5:FireServer("Lighter", nil, false);
+						else
+							p15.serverAnimationTracks.Open:Play();
+							p15.clientAnimationTracks.Open:Play();
+							p15.serverAnimationTracks.Opened:Play();
+							p15.clientAnimationTracks.Opened:Play();
+							coroutine.wrap(function()
+								wait(0.35);
+								if p15.viewModel == p15.viewModel then
+									if v73:GetAttribute("Active") then
+										p15.viewModel.Item.Emitter.ParticleEmitter.Enabled = true;
+										p15.viewModel.Item.Emitter.PointLight.Enabled = true;
+									end;
+								end;
+							end)();
+							if p15.WeldedTool.ItemRoot:FindFirstChild("Idle") then
+								p15.WeldedTool.ItemRoot.Idle:Play();
+								l__SoundServiceEvent__13:FireServer(p15.WeldedTool.ItemRoot.Idle);
+							end;
+							coroutine.wrap(function()
+								v74 = os.time();
+								while true do
+									if os.time() - v74 < 6 then
+
+									else
+										break;
+									end;
+									wait();
+									v75 = p15.character:GetChildren();
+									v76 = #v75;
+									v77 = 1 - 1;
+									while true do
+										if v75[v77]:IsA("Model") then
+											if v75[v77].Name == p15.weapon.Name then
+												if v75[v77]:FindFirstChild("Emitter") then
+													v75[v77].Emitter.PointLight.Enabled = false;
+													v75[v77].Emitter.ParticleEmitter.Enabled = false;
+													break;
+												end;
+											end;
+										end;
+										if 0 <= 1 then
+											if v77 < v76 then
+
+											else
+												break;
+											end;
+										elseif v76 < v77 then
+
+										else
+											break;
+										end;
+										v77 = v77 + 1;									
+									end;								
+								end;
+							end)();
+							l__ToggleAttachment__5:FireServer("Lighter", nil, true);
+						end;
+					end;
+				end;
+				wait(0.7);
+				if l__weapon__72 == p15.weapon then
+					p15.useDebounce = false;
+				end;
+			end;
+		end;
+	end, 
+	GrenadeDefault = function(p16)
+		if p16.useDebounce == false then
+			if p16.clientAnimationTracks.Equip.IsPlaying then
+				if p16.clientAnimationTracks.Equip.Length * 0.8 < p16.clientAnimationTracks.Equip.TimePosition then
+					p16.useDebounce = true;
+					p16.MouseHeld = false;
+					local l__weapon__78 = p16.weapon;
+					u2:PlaySoundV2(p16.WeldedTool.ItemRoot.Use, nil, p16.SoundsTemp);
+					l__SoundServiceEvent__13:FireServer(p16.WeldedTool.ItemRoot.Use);
+					if p16.clientAnimationTracks.UseAlt then
+						p16.clientAnimationTracks.UseAlt:Play();
+					end;
+					if p16.serverAnimationTracks.UseAlt then
+						p16.serverAnimationTracks.UseAlt:Play();
+					end;
+					local v79 = p16.weapon.ItemProperties:GetAttribute("Amount");
+					coroutine.wrap(function()
+						wait(p16.settings.GrenadeThrowDelay);
+						l__ServerProjectile__17:FireServer(l__CurrentCamera__8.CFrame.LookVector);
+					end)();
+					local v80 = tick();
+					while true do
+						if p16.useDebounce == true then
+
+						else
+							break;
+						end;
+						if p16.isEquipped == true then
+
+						else
+							break;
+						end;
+						wait();
+						if not (p16.clientAnimationTracks.UseAlt.Length - 0.15 < tick() - v80) then
+
+						else
+							break;
+						end;					
+					end;
+					if l__weapon__78 == p16.weapon then
+						if 0 < v79 - 1 then
+							p16.ToolStance = "Idle";
+							p16.EquipTValue = 0;
+							if p16.serverAnimationTracks.Equip then
+								p16.serverAnimationTracks.Equip:Play(0);
+							end;
+							if p16.viewModel then
+								p16.clientAnimationTracks.Idle:Play();
+								if p16.clientAnimationTracks.Equip then
+									p16.clientAnimationTracks.Equip:Play(0);
+								end;
+								u2:PlaySoundV2(p16.WeldedTool.ItemRoot.Equip, nil, p16.SoundsTemp);
+								l__SoundServiceEvent__13:FireServer(p16.WeldedTool.ItemRoot.Equip);
+							end;
+							wait(0.35);
+							if l__weapon__78 == p16.weapon then
+								p16.useDebounce = false;
+								return;
+							end;
+						else
+							wait(0.1);
+							p16:unequip();
+						end;
+					else
+						wait(0.1);
+						p16:unequip();
+					end;
+				end;
+			else
+				p16.useDebounce = true;
+				p16.MouseHeld = false;
+				l__weapon__78 = p16.weapon;
+				u2:PlaySoundV2(p16.WeldedTool.ItemRoot.Use, nil, p16.SoundsTemp);
+				l__SoundServiceEvent__13:FireServer(p16.WeldedTool.ItemRoot.Use);
+				if p16.clientAnimationTracks.UseAlt then
+					p16.clientAnimationTracks.UseAlt:Play();
+				end;
+				if p16.serverAnimationTracks.UseAlt then
+					p16.serverAnimationTracks.UseAlt:Play();
+				end;
+				v79 = p16.weapon.ItemProperties:GetAttribute("Amount");
+				coroutine.wrap(function()
+					wait(p16.settings.GrenadeThrowDelay);
+					l__ServerProjectile__17:FireServer(l__CurrentCamera__8.CFrame.LookVector);
+				end)();
+				v80 = tick();
+				while true do
+					if p16.useDebounce == true then
+
+					else
+						break;
+					end;
+					if p16.isEquipped == true then
+
+					else
+						break;
+					end;
+					wait();
+					if not (p16.clientAnimationTracks.UseAlt.Length - 0.15 < tick() - v80) then
+
+					else
+						break;
+					end;				
+				end;
+				if l__weapon__78 == p16.weapon then
+					if 0 < v79 - 1 then
+						p16.ToolStance = "Idle";
+						p16.EquipTValue = 0;
+						if p16.serverAnimationTracks.Equip then
+							p16.serverAnimationTracks.Equip:Play(0);
+						end;
+						if p16.viewModel then
+							p16.clientAnimationTracks.Idle:Play();
+							if p16.clientAnimationTracks.Equip then
+								p16.clientAnimationTracks.Equip:Play(0);
+							end;
+							u2:PlaySoundV2(p16.WeldedTool.ItemRoot.Equip, nil, p16.SoundsTemp);
+							l__SoundServiceEvent__13:FireServer(p16.WeldedTool.ItemRoot.Equip);
+						end;
+						wait(0.35);
+						if l__weapon__78 == p16.weapon then
+							p16.useDebounce = false;
+							return;
+						end;
+					else
+						wait(0.1);
+						p16:unequip();
+					end;
+				else
+					wait(0.1);
+					p16:unequip();
+				end;
+			end;
+		end;
+	end
+};
+local v81 = {};
+local function u22(p17)
+	if p17.weapon.Attachments:FindFirstChild("Magazine") then
+		local v82 = p17.weapon.Attachments.Magazine:GetChildren()[1];
+		if v82 then
+			p17.Bullets = v82.ItemProperties:GetAttribute("LoadedAmmo");
+			p17.BulletsList = {};
+			local v83 = v82.ItemProperties.LoadedAmmo:GetChildren();
+			for v84 = 1, #v83 do
+				p17.BulletsList[tonumber(v83[v84].Name)] = {
+					AmmoType = v83[v84]:GetAttribute("AmmoType"), 
+					Amount = v83[v84]:GetAttribute("Amount")
+				};
+			end;
+			return;
+		end;
+	else
+		p17.Bullets = p17.weapon.ItemProperties:GetAttribute("LoadedAmmo");
+		p17.BulletsList = {};
+		local v85 = p17.weapon.ItemProperties.LoadedAmmo:GetChildren();
+		local v86 = #v85;
+		local v87 = 1 - 1;
+		while true do
+			p17.BulletsList[tonumber(v85[v87].Name)] = {
+				AmmoType = v85[v87]:GetAttribute("AmmoType"), 
+				Amount = v85[v87]:GetAttribute("Amount")
+			};
+			if 0 <= 1 then
+				if v87 < v86 then
+
+				end;
+			elseif not (v86 < v87) then
+				break;
+			end;
+			v87 = v87 + 1;		
+		end;
+	end;
+end;
+function v81.magazine(p18, p19)
+	if not p18.clientAnimationTracks.Equip or not p18.clientAnimationTracks.Equip.IsPlaying or p18.clientAnimationTracks.Equip.Length * 0.8 < p18.clientAnimationTracks.Equip.TimePosition then
+		local v88 = p19;
+		if p19 then
+			local v89 = v88.ItemProperties:GetAttribute("LoadedAmmo") or 0;
+		else
+			v89 = 0;
+		end;
+		if not v88 then
+			local l__CompatibleMagazines__90 = p18.itemProperties.CompatibleMagazines;
+			local v91 = p18.rs_Player.Clothing:GetChildren();
+			for v92 = 1, #v91 do
+				if v91[v92]:FindFirstChild("Inventory") then
+					local v93 = v91[v92].Inventory:GetChildren();
+					for v94 = 1, #v93 do
+						if l__CompatibleMagazines__90:GetAttribute(v93[v94].Name) and (v89 < v93[v94].ItemProperties:GetAttribute("LoadedAmmo") or v88 == nil) then
+							v88 = v93[v94];
+							v89 = v88.ItemProperties:GetAttribute("LoadedAmmo");
+						end;
+					end;
+				end;
+			end;
+		end;
+		if v88 and v89 > 0 then
+			p18:fovUpdate(1, 0.1);
+			p18:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+			if p18.Scope then
+				p18:aim(false);
+			end;
+			local v95 = p18.weapon.Attachments.Magazine:GetChildren()[1];
+			p18:fovUpdate(1, 0.1);
+			p18:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+			p18.reloading = true;
+			if p18.clientAnimationTracks.Use then
+				p18.clientAnimationTracks.Use:Stop();
+			end;
+			if p18.serverAnimationTracks.Use then
+				p18.serverAnimationTracks.Use:Stop();
+			end;
+			if p18.clientAnimationTracks.UseAiming then
+				p18.clientAnimationTracks.UseAiming:Stop();
+			end;
+			if p18.serverAnimationTracks.UseAiming then
+				p18.serverAnimationTracks.UseAiming:Stop();
+			end;
+			local v96 = 0.1;
+			local v97 = 0;
+			local v98 = 0.1;
+			local v99 = 0;
+			local l__ReloadFadeOutTimePos__100 = p18.settings.ReloadFadeOutTimePos;
+			local l__SlideReleaseTimePos__101 = p18.settings.SlideReleaseTimePos;
+			if not v95 then
+				if not p18.clientAnimationTracks.ReloadNoMag then
+					v96 = p18.settings.ReloadFadeIn;
+					v97 = p18.settings.ReloadFadeInTimePos;
+				end;
+				if not p18.serverAnimationTracks.ReloadNoMag then
+					v98 = p18.settings.ReloadFadeIn;
+					v99 = p18.settings.ReloadFadeInTimePos;
+				end;
+			else
+				local v102 = p18.viewModel.Item.Attachments.Magazine:FindFirstChild(v95.Name);
+				if v102 then
+					local v103 = v95.ItemProperties:GetAttribute("LoadedAmmo");
+					if v102:FindFirstChild("Bullet1") then
+						if v103 > 0 then
+							v102.Bullet1.Transparency = 0;
+						else
+							v102.Bullet1.Transparency = 1;
+						end;
+					end;
+					if v102:FindFirstChild("Bullet2") then
+						if v103 > 1 then
+							v102.Bullet2.Transparency = 0;
+						else
+							v102.Bullet2.Transparency = 1;
+						end;
+					end;
+				end;
+			end;
+			if p18.clientAnimationTracks.BoltLock then
+				coroutine.wrap(function()
+					wait(l__ReloadFadeOutTimePos__100 + l__SlideReleaseTimePos__101);
+					p18.clientAnimationTracks.HammerLock:Stop(0.01);
+					p18.clientAnimationTracks.BoltLock:Stop(0.02);
+				end)();
+			end;
+			if p18.clientAnimationTracks.BoltOpen then
+				coroutine.wrap(function()
+					wait(l__ReloadFadeOutTimePos__100 + l__SlideReleaseTimePos__101);
+					p18.clientAnimationTracks.BoltOpen:Play(0.02);
+				end)();
+			end;
+			if p18.clientAnimationTracks.Empty then
+				coroutine.wrap(function()
+					wait(l__ReloadFadeOutTimePos__100);
+					p18.clientAnimationTracks.Empty:Stop(0.01);
+					if p18.serverAnimationTracks.Empty then
+						p18.serverAnimationTracks.Empty:Stop(0.01);
+					end;
+				end)();
+			end;
+			if p18.Bullets ~= 0 then
+				local l__ReloadFadeOut__23 = p18.settings.ReloadFadeOut;
+				coroutine.wrap(function()
+					wait(l__ReloadFadeOutTimePos__100);
+					if not p18.clientAnimationTracks.Reload then
+						p18.clientAnimationTracks.ReloadChamber:Stop(l__ReloadFadeOut__23);
+					end;
+					if not p18.serverAnimationTracks.Reload then
+						p18.serverAnimationTracks.ReloadChamber:Stop(l__ReloadFadeOut__23);
+					end;
+				end)();
+				local v104 = 1;
+				l__SoundServiceEvent__13:FireServer(p18.WeldedTool.ItemRoot.ReloadSound);
+				u2:PlaySoundV2(p18.WeldedTool.ItemRoot.ReloadSound, nil, p18.SoundsTemp);
+			elseif v95 then
+				v104 = 2;
+				l__SoundServiceEvent__13:FireServer(p18.WeldedTool.ItemRoot.ReloadSoundChamber);
+				u2:PlaySoundV2(p18.WeldedTool.ItemRoot.ReloadSoundChamber, nil, p18.SoundsTemp);
+			else
+				v104 = 3;
+				l__SoundServiceEvent__13:FireServer(p18.WeldedTool.ItemRoot.ReloadSoundNoMag);
+				u2:PlaySoundV2(p18.WeldedTool.ItemRoot.ReloadSoundNoMag, nil, p18.SoundsTemp);
+			end;
+			if p18.clientAnimationTracks.ReloadChamber then
+				local v105 = p18.clientAnimationTracks.ReloadChamber;
+				local v106 = p18.serverAnimationTracks.ReloadChamber;
+				if p18.Bullets ~= 0 then
+					if p18.clientAnimationTracks.Reload then
+						v105 = p18.clientAnimationTracks.Reload;
+					end;
+					if p18.serverAnimationTracks.Reload then
+						v106 = p18.serverAnimationTracks.Reload;
+					end;
+				end;
+				if not v95 then
+					if p18.clientAnimationTracks.ReloadNoMag then
+						v105 = p18.clientAnimationTracks.ReloadNoMag;
+					end;
+					if p18.serverAnimationTracks.ReloadNoMag then
+						v106 = p18.serverAnimationTracks.ReloadNoMag;
+					end;
+				end;
+				v105:Play(v96);
+				v105.TimePosition = v97;
+				v106:Play(v98);
+				v106.TimePosition = v99;
+				local u24 = nil;
+				u24 = v105:GetMarkerReachedSignal("NewMag"):Connect(function(p20)
+					u7(p18, v88.Name, v88);
+					u24:Disconnect();
+				end);
+			end;
+			local v107 = l__Reload__12:InvokeServer(nil, v104, v88);
+			u22(p18);
+			if p18.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue") then
+				p18.MaxAmmo = p18.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue").ItemProperties:GetAttribute("MaxLoadedAmmo");
+			end;
+			if p18.reloading == true then
+				p18.reloading = false;
+				p18.RecoilPatternPos = 0;
+				wait(0.2);
+				if p18.RightMouseDown then
+					p18:aim(true);
+				end;
+			end;
+		end;
+	end;
+end;
+function v81.loadByHand(p21, p22)
+	if (not p21.clientAnimationTracks.Equip or not p21.clientAnimationTracks.Equip.IsPlaying or p21.clientAnimationTracks.Equip.Length * 0.8 < p21.clientAnimationTracks.Equip.TimePosition) and p21.MaxAmmo - p21.Bullets > 0 then
+		local v108 = 0;
+		local v109 = p22;
+		if not v109 and p21.itemProperties:GetAttribute("PreferredAmmo") then
+			local l__CompatibleAmmo__110 = p21.itemProperties.CompatibleAmmo;
+			local v111 = p21.rs_Player.Clothing:GetChildren();
+			for v112 = 1, #v111 do
+				if v111[v112]:FindFirstChild("Inventory") then
+					local v113 = v111[v112].Inventory:GetChildren();
+					for v114 = 1, #v113 do
+						if l__CompatibleAmmo__110:GetAttribute(v113[v114].Name) and p21.itemProperties:GetAttribute("PreferredAmmo") == v113[v114].Name then
+							v108 = v108 + v113[v114].ItemProperties:GetAttribute("Amount");
+							v109 = v113[v114];
+						end;
+					end;
+				end;
+			end;
+		end;
+		if not v109 then
+			local l__CompatibleAmmo__115 = p21.itemProperties.CompatibleAmmo;
+			local v116 = p21.rs_Player.Clothing:GetChildren();
+			for v117 = 1, #v116 do
+				if v116[v117]:FindFirstChild("Inventory") then
+					local v118 = v116[v117].Inventory:GetChildren();
+					for v119 = 1, #v118 do
+						if l__CompatibleAmmo__115:GetAttribute(v118[v119].Name) then
+							v108 = v108 + v118[v119].ItemProperties:GetAttribute("Amount");
+							v109 = v118[v119];
+						end;
+					end;
+				end;
+			end;
+		else
+			local v120 = v109.ItemProperties:GetAttribute("Amount");
+		end;
+		local v121 = v120;
+		if p21.MaxAmmo < v121 then
+			v121 = p21.MaxAmmo;
+		end;
+		if v109 then
+			local v122 = game.ReplicatedStorage.AmmoTypes:FindFirstChild(v109.Name);
+			if v122:FindFirstChild("Ammo") then
+				if p21.viewModel.Item.Ammo:FindFirstChild("SurfaceAppearance") then
+					p21.viewModel.Item.Ammo:FindFirstChild("SurfaceAppearance"):Destroy();
+				end;
+				v122.Ammo.SurfaceAppearance:Clone().Parent = p21.viewModel.Item.Ammo;
+			end;
+			p21:fovUpdate(1, 0.1);
+			p21:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+			if p21.Scope then
+				p21:aim(false);
+			end;
+			p21.reloading = true;
+			if p21.clientAnimationTracks.Use then
+				p21.clientAnimationTracks.Use:Stop();
+			end;
+			if p21.serverAnimationTracks.Use then
+				p21.serverAnimationTracks.Use:Stop();
+			end;
+			if p21.clientAnimationTracks.UseAiming then
+				p21.clientAnimationTracks.UseAiming:Stop();
+			end;
+			if p21.serverAnimationTracks.UseAiming then
+				p21.serverAnimationTracks.UseAiming:Stop();
+			end;
+			if p21.clientAnimationTracks.ReloadChamber then
+				p21.clientAnimationTracks.ReloadChamber:Play();
+				p21.serverAnimationTracks.ReloadChamber:Play();
+				local u25 = 0;
+				local u26 = nil;
+				u26 = p21.clientAnimationTracks.ReloadChamber:GetMarkerReachedSignal("BulletIn"):Connect(function(p23)
+					local v123 = l__Reload__12:InvokeServer(nil, 1, v109);
+					u22(p21);
+					u25 = u25 + 1;
+					if v121 <= p21.Bullets and u25 ~= p21.MaxAmmo or p21.cancellingReload == true then
+						p21.reloading = false;
+						p21.cancellingReload = false;
+						if p21.clientAnimationTracks.Empty then
+							p21.clientAnimationTracks.Empty:Stop();
+						end;
+						if p21.serverAnimationTracks.Empty then
+							p21.serverAnimationTracks.Empty:Stop();
+						end;
+						p21.clientAnimationTracks.ReloadChamber.TimePosition = p21.settings.ReloadFadeOutTimePos;
+						p21.serverAnimationTracks.ReloadChamber.TimePosition = p21.settings.ReloadFadeOutTimePos;
+						p21.RecoilPatternPos = 0;
+						if p21.RightMouseDown then
+							p21:aim(true);
+						end;
+						u26:Disconnect();
+					end;
+				end);
+				coroutine.wrap(function()
+					while p21.reloading and tick() - tick() < p21.clientAnimationTracks.ReloadChamber.Length do
+						wait();					
+					end;
+					if p21.reloading then
+						p21.reloading = false;
+						p21.cancellingReload = false;
+						if p21.clientAnimationTracks.Empty then
+							p21.clientAnimationTracks.Empty:Stop();
+						end;
+						if p21.serverAnimationTracks.Empty then
+							p21.serverAnimationTracks.Empty:Stop();
+						end;
+						p21.clientAnimationTracks.ReloadChamber:Stop();
+						p21.serverAnimationTracks.ReloadChamber:Stop();
+						p21.RecoilPatternPos = 0;
+						if p21.RightMouseDown then
+							p21:aim(true);
+						end;
+						u26:Disconnect();
+					end;
+				end)();
+			end;
+		end;
+	end;
+end;
+StanceTypes = {
+	Standing = function(p24)
+		p24.humanoid.HipHeight = 2;
+	end, 
+	Crouching = function(p25)
+		p25.characterAnimations.crouchAnimIdle:Play(0.3);
+		p25.humanoid.HipHeight = 0.65;
+		coroutine.wrap(function()
+			while p25.stance == "Crouching" do
+				wait();
+				if p25.humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+					if p25.characterAnimations.crouchAnimWalk.IsPlaying ~= true then
+						p25.characterAnimations.crouchAnimWalk:Play(0.2);
+					end;
+				else
+					p25.characterAnimations.crouchAnimWalk:AdjustSpeed(0);
+					p25.characterAnimations.crouchAnimWalk:Stop(0.2);
+				end;			
+			end;
+			p25.characterAnimations.crouchAnimIdle:Stop(0.2);
+			p25.characterAnimations.crouchAnimWalk:Stop(0.2);
+		end)();
+	end, 
+	Proning = function(p26)
+
+	end
+};
+local u27 = require(l__Modules__10:WaitForChild("UniversalTables"));
+local u28 = require(l__Modules__10:WaitForChild("spring"));
+function v1.new(p27, p28)
+	local v124 = {
+		player = p27, 
+		rs_Player = game.ReplicatedStorage.Players:WaitForChild(p27.Name), 
+		character = p28, 
+		viewModel = nil, 
+		hrp = p28.HumanoidRootPart, 
+		humanoid = p28.Humanoid
+	};
+	v124.mouse = v124.player:GetMouse();
+	v124.GameplayVariables = v124.rs_Player.Status.GameplayVariables;
+	v124.rs_Vehicle = v124.GameplayVariables.Vehicle;
+	v124.GameplaySettings = v124.rs_Player.Settings.GameplaySettings;
+	v124.VisualSettings = v124.rs_Player.Settings.VisualSettings;
+	v124.baseFov = v124.GameplaySettings:GetAttribute("DefaultFOV");
+	v124.GameplaySettings:GetAttributeChangedSignal("DefaultFOV"):Connect(function()
+		v124.baseFov = v124.GameplaySettings:GetAttribute("DefaultFOV");
+		l__CurrentCamera__8.FieldOfView = v124.baseFov;
+	end);
+	v124.mainGui = p27.PlayerGui.MainGui;
+	v124.menuGui = p27.PlayerGui:FindFirstChild("MenuGui");
+	v124.CancelTables = {};
+	local l__CancelTables__125 = u27.UniversalTable.CancelTables;
+	for v126 = 1, #l__CancelTables__125 do
+		if v124.mainGui.MainFrame:FindFirstChild(l__CancelTables__125[v126]) then
+			table.insert(v124.CancelTables, v124.mainGui.MainFrame:FindFirstChild(l__CancelTables__125[v126]));
+		end;
+		if v124.menuGui and v124.menuGui.MainFrame:FindFirstChild(l__CancelTables__125[v126]) then
+			table.insert(v124.CancelTables, v124.menuGui.MainFrame:FindFirstChild(l__CancelTables__125[v126]));
+		end;
+	end;
+	v124.isAiming = false;
+	v124.isEquipped = false;
+	v124.firedInRow = 0;
+	v124.RecoilPatternLastTick = tick();
+	v124.weaponOffSet = CFrame.new();
+	v124.sprintOffSet = Vector3.new();
+	v124.swayMult = 0.18;
+	v124.FrameRateSync = 0;
+	v124.HorizontalVelocityDelta = 0;
+	v124.HorizontalVelocityTime = 0;
+	v124.dt = 0;
+	v124.timeNow = 0;
+	v124.ActionButtonHeld = false;
+	v124.AltActionButtonHeld = false;
+	v124.SprintButtonHeld = false;
+	v124.lastSpeed = 0;
+	v124.lastJumpHeight = 0;
+	v124.sprinting = false;
+	v124.stance = "Standing";
+	v124.lastStance = "Standing";
+	v124.lean = 0;
+	v124.aimingLeanRotation = 0;
+	v124.DefaultWalkSpeed = 10;
+	v124.LaserUpdateHz = 0.016666666666666666;
+	v124.LastLaserUpdate = 0;
+	v124.characterAnimations = {};
+	v124.humanoid:WaitForChild("Animator");
+	v124.characterAnimations.crouchAnimIdle = v124.humanoid.Animator:LoadAnimation(script.Animations.CrouchIdle);
+	v124.characterAnimations.crouchAnimWalk = v124.humanoid.Animator:LoadAnimation(script.Animations.CrouchWalk);
+	v124.characterAnimations.LeaningBlend = v124.humanoid.Animator:LoadAnimation(script.Animations.LeaningBlend);
+	v124.clientAnimations = {};
+	v124.serverAnimations = {};
+	v124.clientAnimationTracks = {};
+	v124.serverAnimationTracks = {};
+	v124.Connections = {};
+	v124.Emitter = nil;
+	v124.armTilt = u28.new(0, 0, 0, 10, 0.8);
+	v124.armTiltSprint = u28.new(0, 0, 0, 11, 0.85);
+	v124.armTiltJump = u28.new(0, 0, 0, 10, 0.5);
+	v124.CameraTilt = u28.new(0, 0, 0, 10, 0.5);
+	v124.LeanAlpha = u28.new(0, 0, 0, 10, 0.78);
+	v124.WallTouchTilt = u28.new(0, 0, 0, 17, 0.8);
+	v124.EquipTilt = u28.new(0, 0, 0, 10, 0.75);
+	v124.RecoilTilt = u28.new(0, 0, 0, 18, 0.7);
+	v124.sway = u28.new(Vector3.new(), Vector3.new(), Vector3.new(), 15, 0.8);
+	v124.bobbing = u28.new(Vector3.new(), Vector3.new(), Vector3.new(), 20, 0.78);
+	v124.bobbingSprint = u28.new(Vector3.new(), Vector3.new(), Vector3.new(), 13, 0.34);
+	v124.RecoilTiltHorizontal = u28.new(Vector3.new(), Vector3.new(), Vector3.new(), 15, 0.6);
+	l__CurrentCamera__8.FieldOfView = v124.baseFov;
+	v1:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+	v124.swayDeadzone = Vector2.new(0.05, 0.05);
+	v124.swayDeadzoneTarget = Vector2.new(0, 0);
+	v124.A1Sent = false;
+	v124.ErrLog = false;
+	script.Binds.AdjustBullets.Event:Connect(function(p29, p30)
+		if v124.rs_Player.Status.GameplayVariables:GetAttribute("EquipId") == p29 then
+			u22(v124);
+		end;
+	end);
+	return setmetatable(v124, fps_mt);
+end;
+function v1.updateSway(p31, p32, p33, p34)
+	local v127 = math.clamp(p31.FrameRateSync, 0.05, 5);
+	local v128 = math.rad(p31.isAiming and p32 * p31.swayMult / 3 / v127 or p32 * p31.swayMult / v127);
+	local v129 = math.rad(p31.isAiming and p33 * p31.swayMult / 3 / v127 or p33 * p31.swayMult / v127);
+	local v130 = v128;
+	local v131 = v129;
+	if p31.isAiming or p31.ToolStance == "Aim" then
+		p31.swayDeadzoneTarget = Vector2.new(0, 0);
+	else
+		local v132 = p31.swayDeadzoneTarget.X + v128;
+		local v133 = p31.swayDeadzoneTarget.Y + v129;
+		if p31.swayDeadzone.X < v132 then
+			v130 = v132 - p31.swayDeadzone.X;
+			v132 = p31.swayDeadzone.X;
+		elseif v132 < -p31.swayDeadzone.X then
+			v130 = v132 + p31.swayDeadzone.X;
+			v132 = -p31.swayDeadzone.X;
+		end;
+		if p31.swayDeadzone.Y < v133 then
+			v131 = v133 - p31.swayDeadzone.Y;
+			v133 = p31.swayDeadzone.Y;
+		elseif v133 < -p31.swayDeadzone.Y then
+			v131 = v133 + p31.swayDeadzone.Y;
+			v133 = -p31.swayDeadzone.Y;
+		end;
+		p31.swayDeadzoneTarget = Vector2.new(v132, v133);
+	end;
+	p31.sway.target = Vector3.new(p31.swayDeadzoneTarget.X + v130, p31.swayDeadzoneTarget.Y + v131, v128);
+end;
+local function u29(p35)
+	local v134 = -p35.character.HumanoidRootPart.CFrame.lookVector:Dot(p35.humanoid.moveDirection);
+	local v135 = p35.humanoid:GetState();
+	if u2:IsPlayerAlive(p35.player) then
+		local v136 = p35.character.HumanoidRootPart:GetAttribute("MovementModifier");
+		if p35.sprinting == true and v134 < -0.35 then
+			if v135 == Enum.HumanoidStateType.Swimming then
+				local v137 = 18.2;
+				local v138 = 0;
+				p35:changeLean(0, true);
+				if p35.stance ~= "Standing" and p35.rs_Vehicle.CurrentSeat.Value then
+					p35:changeStance("Standing", true);
+				end;
+			else
+				p35:changeLean(0, true);
+				v137 = 18.2 + v136;
+				v138 = 3.5 + v136 / 2.5;
+			end;
+		elseif p35.sprinting == true then
+			if v135 == Enum.HumanoidStateType.Swimming then
+				v137 = 16;
+				v138 = 0;
+				p35:changeLean(0, true);
+				if p35.stance ~= "Standing" and p35.rs_Vehicle.CurrentSeat.Value then
+					p35:changeStance("Standing", true);
+				end;
+			else
+				p35:changeLean(0, true);
+				v137 = 12 + v136;
+				v138 = 3.3 + v136 / 2.5;
+			end;
+		elseif v135 == Enum.HumanoidStateType.Swimming then
+			v137 = 14;
+			v138 = 0;
+			p35:changeLean(0, true);
+			if p35.stance ~= "Standing" and p35.rs_Vehicle.CurrentSeat.Value then
+				p35:changeStance("Standing", true);
+			end;
+		else
+			v137 = 10 + v136 / 4;
+			v138 = 3.3 + v136 / 2.5;
+		end;
+		if p35.stance == "Crouching" then
+			if v135 == Enum.HumanoidStateType.Swimming then
+				v137 = 14;
+				v138 = 0;
+				p35:changeLean(0, true);
+				if p35.stance ~= "Standing" and p35.rs_Vehicle.CurrentSeat.Value then
+					p35:changeStance("Standing", true);
+				end;
+			else
+				v137 = v137 * 0.6;
+				v138 = 3.3 + v136 / 2.5;
+			end;
+		end;
+	else
+		v137 = 0;
+		v138 = 0;
+	end;
+	if v138 > 0 and p35.humanoid:GetAttribute("JumpCooldown") and tick() < p35.humanoid:GetAttribute("JumpCooldown") then
+		v138 = 0;
+	end;
+	if v138 ~= p35.lastJumpHeight then
+		p35.humanoid.JumpHeight = v138;
+		p35.lastJumpHeight = v138;
+	end;
+	if v137 ~= p35.lastSpeed then
+		p35.humanoid.WalkSpeed = v137;
+		p35.lastSpeed = v137;
+	end;
+end;
+local l__TweenService__30 = game:GetService("TweenService");
+local l__UserInputService__31 = game:GetService("UserInputService");
+local function u32(p36)
+	local l__ItemLength__139 = p36.ItemLength;
+	local v140 = 0;
+	v11.FilterDescendantsInstances = { l__CurrentCamera__8, p36.character, workspace.NoCollision };
+	for v141, v142 in pairs({ {
+			Up = -0.32, 
+			Right = 0
+		}, {
+			Up = 0.1, 
+			Right = 0.32
+		}, {
+			Up = 0.1, 
+			Right = -0.32
+		} }) do
+		local v143 = CFrame.new(l__CurrentCamera__8.CFrame.Position + l__CurrentCamera__8.CFrame.RightVector * v142.Right + l__CurrentCamera__8.CFrame.UpVector * v142.Up);
+		local l__LookVector__144 = l__CurrentCamera__8.CFrame.LookVector;
+		local v145 = workspace:Raycast(v143.Position, l__LookVector__144 * l__ItemLength__139, v11);
+		local v146 = Vector3.new();
+		if v145 then
+			local l__Position__147 = v145.Position;
+			local v148 = (l__ItemLength__139 - (v145.Position - l__CurrentCamera__8.CFrame.Position).Magnitude) / l__ItemLength__139;
+			if v140 < v148 then
+				v140 = v148;
+			end;
+		else
+			local v149 = v143.Position + l__LookVector__144 * l__ItemLength__139;
+		end;
+	end;
+	return v140;
+end;
+function v1.updateClient(p37, p38)
+	if u2:IsPlayerAlive(p37.player) then
+		local l__AssemblyLinearVelocity__150 = p37.hrp.AssemblyLinearVelocity;
+		local l__Y__151 = l__AssemblyLinearVelocity__150.Y;
+		local l__Magnitude__152 = Vector2.new(l__AssemblyLinearVelocity__150.X, l__AssemblyLinearVelocity__150.Z).Magnitude;
+		p37.FrameRateSync = p38 * 60;
+		p37.timeNow = p37.timeNow + p38;
+		p37.HorizontalVelocityDelta = p37.HorizontalVelocityDelta + p38 * l__Magnitude__152 * 0.21;
+		p37.moveDirection = p37.humanoid.moveDirection;
+		p37.isMoving = p37.moveDirection:Dot(p37.moveDirection) > 0;
+		p37.strafe = -p37.hrp.CFrame.rightVector:Dot(p37.moveDirection);
+		p37.AimStrafer = p37.hrp.CFrame.lookVector:Dot(l__CurrentCamera__8.CFrame.lookVector);
+		p37.SprintStrafe = -p37.hrp.CFrame.lookVector:Dot(p37.moveDirection);
+		if p37.SprintStrafe < -0.35 then
+			p37.SprintStrafe = -1;
+		elseif p37.SprintStrafe > 0 then
+			p37.SprintStrafe = 0;
+		end;
+		if p37.ToolStance == "Ready" then
+			local v153 = 0.014;
+		else
+			v153 = 0.05;
+		end;
+		p37.modifierMovement = v153;
+		p37.jump = 0;
+		p37.isJumping = false;
+		if l__Y__151 > 18 then
+			p37.jump = -0.7;
+			p37.isJumping = true;
+		elseif l__Y__151 < -18 then
+			p37.jump = 0.6;
+			p37.isJumping = true;
+		end;
+		if p37.stance ~= "Standing" and p37.rs_Vehicle.CurrentSeat.Value then
+			p37:changeLean(0, true);
+			p37:changeStance("Standing", true);
+		end;
+		if p37.stance ~= p37.lastStance then
+			StanceTypes[p37.stance](p37);
+			p37.lastStance = p37.stance;
+		end;
+		if p37.ToolStance == "Ready" then
+			local v154 = 7;
+		else
+			v154 = 12;
+		end;
+		p37.armTiltJump.target = math.rad(v154 * p37.jump);
+		p37.CameraTilt.target = math.clamp(l__Magnitude__152 / p37.DefaultWalkSpeed, 0.2, 2);
+		p37.armTiltJump:update(p38);
+		p37.CameraTilt:update(p38);
+		p37.LeanAlpha:update(p38);
+		if p37.isEquipped then
+			if p37.weapon.Parent == nil or p37.rs_Player.Status.GameplayVariables.EquippedTool.Value ~= p37.weapon then
+				p37:unequip(nil, true);
+			else
+				p37.EquipTValue = p37.EquipTValue + 3 * p37.FrameRateSync;
+				if p37.EquipTValue > 0 then
+					p37.EquipTValue = 0;
+				end;
+				p37.EquipTilt.target = math.rad(p37.EquipTValue);
+			end;
+		end;
+		if p37.viewModel and p37.viewModel.PrimaryPart ~= nil then
+			p37.timeSinceUse = p37.timeSinceUse + p37.FrameRateSync;
+			if p37.ToolStance == "Ready" then
+				p37.RecoilTValue = math.ceil(p37.MaxRecoil / 1.9) - p37.timeSinceUse;
+			else
+				p37.RecoilTValue = p37.MaxRecoil - p37.timeSinceUse;
+			end;
+			if p37.ToolStance == "Ready" then
+				local v155 = 0.1;
+			else
+				v155 = 0.4;
+			end;
+			p37.modifierRecoilTiltHorizontal = v155 * 0.05;
+			if p37.ToolStance == "Ready" then
+				local v156 = 0.2;
+			else
+				v156 = 2.5;
+			end;
+			p37.modifierKick = v156;
+			p37.KickBack = p37.RecoilTilt.p * 10 * p37.modifierKick;
+			if p37.MouseHeld then
+				local v157 = true;
+				for v158 = 1, #p37.CancelTables do
+					if p37.CancelTables[v158].Visible == true then
+						v157 = false;
+						break;
+					end;
+				end;
+				if v157 and useTypes[p37.useModuleName] then
+					if p37.clientAnimationTracks.Inspect then
+						p37.clientAnimationTracks.Inspect:Stop();
+						p37.serverAnimationTracks.Inspect:Stop();
+						p37.WeldedTool.ItemRoot.Inspect:Stop();
+					end;
+					useTypes[p37.useModuleName](p37);
+				else
+					p37.MouseHeldTime = 0;
+					p37.RecoilReduction = p37.RecoilReduction - 0.75;
+					if p37.RecoilReduction < 0 then
+						p37.RecoilReduction = 0;
+					end;
+					if p37.RecoilPatternRecoverySpeed < tick() - p37.RecoilPatternLastTick then
+						p37.RecoilPatternLastTick = tick();
+						p37.RecoilPatternPos = math.clamp(p37.RecoilPatternPos - 1, 0, p37.MaxAmmo);
+					end;
+				end;
+			else
+				p37.MouseHeldTime = 0;
+				p37.RecoilReduction = p37.RecoilReduction - 0.75;
+				if p37.RecoilReduction < 0 then
+					p37.RecoilReduction = 0;
+				end;
+				if p37.RecoilPatternRecoverySpeed < tick() - p37.RecoilPatternLastTick then
+					p37.RecoilPatternLastTick = tick();
+					p37.RecoilPatternPos = math.clamp(p37.RecoilPatternPos - 1, 0, p37.MaxAmmo);
+				end;
+			end;
+			p37.MouseHeldTime = p37.MouseHeldTime + p37.FrameRateSync;
+			if p37.ReductionStartTime < p37.MouseHeldTime then
+				p37.RecoilReduction = p37.RecoilReduction + 0.125;
+				if p37.RecoilReductionMax < p37.RecoilReduction then
+					p37.RecoilReduction = p37.RecoilReductionMax;
+				end;
+			end;
+			p37.RecoilTValue = math.clamp(p37.RecoilTValue - p37.RecoilReduction, 0, 100);
+			p37.firedInRow = math.clamp(p37.firedInRow - 0.05 * p37.FrameRateSync, 0, 100);
+			if p37.barrel then
+				if p37.firedInRow > 6 then
+					if not p37.barrel:FindFirstChild("OverHeat") then
+						game.ReplicatedStorage.VFX.MuzzleEffects.OverHeat:Clone().Parent = p37.barrel;
+					else
+						p37.barrel.OverHeat.Rate = math.clamp(math.floor(p37.firedInRow / 3), 3, 21);
+						p37.barrel.OverHeat.Enabled = true;
+					end;
+				elseif p37.barrel:FindFirstChild("OverHeat") then
+					p37.barrel.OverHeat.Enabled = false;
+				end;
+			end;
+			p37.RecoilTilt.target = math.rad(p37.RecoilTValue * p37.MaximumKickBack * p37.AimStrafer);
+			if p37.timeSinceUse > 11 then
+				local v159 = 0;
+				local v160 = 0;
+				if p37.RecoilTiltHorizontal.target.X > 0 then
+					v159 = math.clamp(p37.RecoilTiltHorizontal.target.X - 0.015 * p37.FrameRateSync, 0, 1000);
+				elseif p37.RecoilTiltHorizontal.target.X < 0 then
+					v159 = math.clamp(p37.RecoilTiltHorizontal.target.X + 0.015 * p37.FrameRateSync, -1000, 0);
+				end;
+				if p37.RecoilTiltHorizontal.target.Y > 0 then
+					v160 = math.clamp(p37.RecoilTiltHorizontal.target.Y - 0.015 * p37.FrameRateSync, 0, 1000);
+				elseif p37.RecoilTiltHorizontal.target.Y < 0 then
+					v160 = math.clamp(p37.RecoilTiltHorizontal.target.Y + 0.015 * p37.FrameRateSync, -1000, 0);
+				end;
+				p37.RecoilTiltHorizontal.target = Vector3.new(v159, v160, 0);
+			elseif p37.isAiming then
+				local v161 = 0;
+				local v162 = 0;
+				if p37.RecoilTiltHorizontal.target.X > 0 then
+					v161 = math.clamp(p37.RecoilTiltHorizontal.target.X - 0.0012 * p37.FrameRateSync, 0, 1000);
+				elseif p37.RecoilTiltHorizontal.target.X < 0 then
+					v161 = math.clamp(p37.RecoilTiltHorizontal.target.X + 0.0012 * p37.FrameRateSync, -1000, 0);
+				end;
+				if p37.RecoilTiltHorizontal.target.Y > 0 then
+					v162 = math.clamp(p37.RecoilTiltHorizontal.target.Y - 0.0012 * p37.FrameRateSync, 0, 1000);
+				elseif p37.RecoilTiltHorizontal.target.Y < 0 then
+					v162 = math.clamp(p37.RecoilTiltHorizontal.target.Y + 0.0012 * p37.FrameRateSync, -1000, 0);
+				end;
+				p37.RecoilTiltHorizontal.target = Vector3.new(v161, v162, 0);
+			end;
+			if p37.ToolStance == "Ready" then
+				local v163 = 0.6;
+			else
+				v163 = 4;
+			end;
+			p37.armTilt.target = math.rad(v163 * p37.strafe);
+			p37.aimingLeanRotation = -p37.LeanAlpha.p * 11;
+			if p37.isAiming == true and p37.aimPart then
+				l__TweenService__30:Create(p37.TempCFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+					Value = (p37.aimPart.CFrame * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(p37.aimingLeanRotation))):ToObjectSpace(p37.viewModel.HumanoidRootPart.CFrame)
+				}):Play();
+			end;
+			if p37.GameplayVariables.Sprinting:GetAttribute("Value") and p37.isMoving then
+				if p37.serverAnimationTracks.Sprint then
+					if p37.SprintStrafe == 0 then
+						if p37.serverAnimationTracks.Sprint then
+							p37.serverAnimationTracks.Sprint:Stop(0.3);
+						end;
+						if p37.clientAnimationTracks.Sprint then
+							p37.clientAnimationTracks.Sprint:Stop(0.1);
+						end;
+					else
+						if p37.serverAnimationTracks.Sprint and not p37.serverAnimationTracks.Sprint.IsPlaying then
+							p37.serverAnimationTracks.Sprint:Play(0.3);
+						end;
+						if p37.clientAnimationTracks.Sprint and not p37.clientAnimationTracks.Sprint.IsPlaying then
+							p37.clientAnimationTracks.Sprint:Play(0.1);
+						end;
+					end;
+				end;
+				if p37.isMoving and not p37.isJumping then
+					local v164 = Vector3.new(math.sin(2.5 * p37.HorizontalVelocityDelta) * p37.modifierMovement / p37.SprintSwayModifer, math.sin(5 * p37.HorizontalVelocityDelta) * p37.modifierMovement / p37.SprintSwayModifer, 0) or Vector3.new();
+				else
+					v164 = Vector3.new();
+				end;
+				p37.bobbingSprint.target = v164;
+				if p37.isMoving then
+					local v165 = not p37.isJumping and Vector3.new(0, 0, 0) or Vector3.new(0, 0, 0);
+				else
+					v165 = Vector3.new(0, 0, 0);
+				end;
+				p37.bobbing.target = v165;
+				if p37.ToolStance == "Ready" and p37.isMoving then
+					local v166 = 12;
+				else
+					v166 = 12;
+				end;
+				p37.armTiltSprint.target = math.rad(v166 * p37.SprintStrafe);
+			else
+				if p37.serverAnimationTracks.Sprint then
+					p37.serverAnimationTracks.Sprint:Stop(0.3);
+				end;
+				if p37.clientAnimationTracks.Sprint then
+					p37.clientAnimationTracks.Sprint:Stop(0.1);
+				end;
+				p37.bobbingSprint.target = p37.isMoving and not p37.isJumping and Vector3.new(0, 0, 0) or Vector3.new();
+				p37.bobbing.target = p37.isMoving and not p37.isJumping and Vector3.new(math.sin(3 * p37.HorizontalVelocityDelta) * p37.modifierMovement / p37.WalkSwayModifer, math.sin(6 * p37.HorizontalVelocityDelta) * p37.modifierMovement / p37.WalkSwayModifer, 0) or Vector3.new(math.sin(1 * tick()) * p37.modifierMovement / p37.IdleSwayModifier, math.sin(2 * tick()) * p37.modifierMovement / p37.IdleSwayModifier, 0);
+				if p37.ToolStance == "Ready" and p37.isMoving then
+					local v167 = 0;
+				else
+					v167 = 0;
+				end;
+				p37.armTiltSprint.target = math.rad(v167 * p37.SprintStrafe);
+			end;
+			local v168 = 1;
+			if l__CurrentCamera__8.FieldOfView / p37.baseFov < 1 then
+				v168 = 1.35;
+			end;
+			l__UserInputService__31.MouseDeltaSensitivity = math.clamp(l__CurrentCamera__8.FieldOfView / p37.baseFov / v168, 0.1, 1);
+			local v169 = p37.TouchWallPosZ;
+			p37.WallTouchTilt.target = u32(p37);
+			local l__p__170 = p37.WallTouchTilt.p;
+			if l__p__170 > 0.1 then
+				p37.reAimDebunce = false;
+				p37:aim(false, nil, "Wall");
+			elseif p37.reAimDebunce == false and p37.Mouse2Held then
+				p37.reAimDebunce = true;
+				p37:aim(true);
+			end;
+			p37.sway:update(p38);
+			p37.armTilt:update(p38);
+			p37.EquipTilt:update(p38);
+			p37.armTiltSprint:update(p38);
+			p37.WallTouchTilt:update(p38);
+			p37.RecoilTilt:update(p38);
+			p37.RecoilTiltHorizontal:update(p38);
+			p37.bobbing:update(p38);
+			p37.bobbingSprint:update(p38);
+			if p37.viewModel.PrimaryPart ~= nil then
+				local v171 = math.abs(p37.armTiltSprint.p / 0.2);
+				local v172 = CFrame.Angles(-p37.sway.p.y, -p37.sway.p.x, -p37.sway.p.Z / 1.4 - p37.bobbing.p.X / 4);
+				local v173 = CFrame.new(p37.bobbing.p / 2);
+				local v174 = CFrame.fromEulerAnglesXYZ(p37.armTiltJump.p + p37.armTiltSprint.p + p37.EquipTilt.p + p37.bobbingSprint.p.Y / 3, p37.EquipTilt.p / 2 + math.abs(p37.armTiltSprint.p * p37.sprintOffSet.X), p37.armTilt.p);
+				local v175 = CFrame.new(p37.armTiltSprint.p * p37.sprintOffSet.Y, 0, p37.armTiltSprint.p * p37.sprintOffSet.Z);
+				local v176 = CFrame.new(p37.bobbingSprint.p.X * 1.5, p37.bobbingSprint.p.Y, -p37.bobbingSprint.p.X / 2);
+				local v177 = l__p__170;
+				if l__p__170 > 0.4 then
+					v177 = math.abs(0.4 - (l__p__170 - 0.4));
+					if l__p__170 > 0.8 then
+						v169 = -v169 * 1.7;
+					end;
+				end;
+				local v178 = math.clamp(l__p__170 - 0.4, 0, 1);
+				local v179 = CFrame.new(0, v178 * p37.TouchWallPosY, v177 * v169);
+				local v180 = CFrame.fromEulerAnglesYXZ(math.rad(v178 * p37.TouchWallRotX), math.rad(v178 * p37.TouchWallRotY), 0);
+				local v181 = CFrame.fromEulerAnglesYXZ(p37.RecoilTiltHorizontal.p.Y, p37.RecoilTiltHorizontal.p.X, p37.RecoilTiltHorizontal.p.Z);
+				local v182 = CFrame.fromEulerAnglesXYZ(0, 0, p37.ToolStance ~= "Idle" and math.rad(p37.LeanAlpha.p * 11 + p37.aimingLeanRotation) / 2 or math.rad(p37.LeanAlpha.p * 11));
+				if p37.isEquipped then
+					p37.viewModel:SetPrimaryPartCFrame(workspace.CurrentCamera.CFrame * p37.TempCFrame.Value * v172 * v173 * v174 * v175 * v176 * v179 * v180 * v181 * v182);
+				else
+					p37.viewModel:SetPrimaryPartCFrame(CFrame.new(0, 1000, 0));
+				end;
+				if p37.clientAnimationTracks.Equip then
+					local v183 = p37.viewModel.FakeCamera.CFrame:ToObjectSpace(p37.viewModel.HumanoidRootPart.CFrame);
+					if p37.oldCamCF then
+						local v184, v185, v186 = v183:ToOrientation();
+						local v187, v188, v189 = v183:ToObjectSpace(p37.oldCamCF):ToEulerAnglesXYZ();
+						l__CurrentCamera__8.CFrame = l__CurrentCamera__8.CFrame * CFrame.Angles(v187 / 2, v188 / 2, -v186 / 2);
+					end;
+					p37.oldCamCF = v183;
+				else
+					local v190 = p37.viewModel.FakeCamera.CFrame:ToObjectSpace(p37.viewModel.HumanoidRootPart.CFrame);
+					if p37.oldCamCF then
+						local v191, v192, v193 = v190:ToOrientation();
+						local v194, v195, v196 = v190:ToObjectSpace(p37.oldCamCF):ToEulerAnglesXYZ();
+						l__CurrentCamera__8.CFrame = l__CurrentCamera__8.CFrame * CFrame.Angles(v194 / 2, v195 / 2, -v193 / 2);
+					end;
+					p37.oldCamCF = v190;
+				end;
+				if p37.sight then
+					local v197 = nil;
+					local v198 = p37.sight:FindFirstChild("Reticle") or p37.sight.AimPart;
+					local v199 = v198.CFrame * CFrame.new(-v198.Size.X / 2, 0, 0);
+					local l__CFrame__200 = l__CurrentCamera__8.CFrame;
+					local v201 = l__CFrame__200:ToObjectSpace(v199);
+					local v202 = l__CFrame__200:ToObjectSpace(v199 * CFrame.new(3, 0, 0));
+					local l__Z__203 = v201.Z;
+					v197 = v199:ToObjectSpace(CFrame.lookAt(v199.Position, v199.Position + v199.RightVector) * CFrame.new(Vector3.new(v202.X / v202.Z * l__Z__203 - v201.X, v202.Y / v202.Z * l__Z__203 - v201.Y, 0)));
+					if v198:FindFirstChild("PrismScopeGui") then
+						local l__PrismScopeGui__204 = v198.PrismScopeGui;
+						local l__PixelsPerStud__205 = l__PrismScopeGui__204.PixelsPerStud;
+						l__PrismScopeGui__204.Sight.Position = UDim2.new(0.5, v197.Z * l__PixelsPerStud__205, 0.5, -v197.Y * l__PixelsPerStud__205);
+					else
+						local l__ScopeGui__206 = v198.ScopeGui;
+						local l__PixelsPerStud__207 = l__ScopeGui__206.PixelsPerStud;
+						l__ScopeGui__206.Sight.Position = UDim2.new(0.5, v197.Z * l__PixelsPerStud__207, 0.5, -v197.Y * l__PixelsPerStud__207);
+						p37.mainGui.MainFrame.ScreenEffects.Parallax.Visible = false;
+					end;
+				end;
+				if p37.laserActive == true then
+					if p37.laserDot == nil then
+						local v208 = p37.viewModel.Item.Attachments.Extra:FindFirstChild(p37.weapon.Attachments.Extra:FindFirstChildOfClass("StringValue").Name);
+						if v208 then
+							p37.Emitter = v208.Emitter;
+							p37.laserDot = game.ReplicatedStorage.VFX.Misc.Laser:Clone();
+							p37.laserDot.Name = "Laser";
+							p37.laserDot.Beam.Enabled = false;
+							p37.laserDot.Attachment2.Parent = p37.Emitter;
+							p37.laserDot.Parent = workspace.NoCollision.Effects;
+						else
+							p37.laserActive = false;
+						end;
+					else
+						p37.laserDot.Beam.Enabled = true;
+						local l__LookVector__209 = p37.barrel.CFrame.LookVector;
+						local l__Position__210 = CFrame.new(p37.Emitter.Position, p37.Emitter.CFrame.LookVector * -2).Position;
+						v11.FilterDescendantsInstances = { l__CurrentCamera__8, p37.character, workspace.NoCollision };
+						local v211 = workspace:Raycast(l__Position__210, l__LookVector__209 * 100, v11);
+						if v211 then
+							local v212 = v211.Position;
+							p37.laserDot.Transparency = 0;
+						else
+							v212 = l__Position__210 + l__LookVector__209 * 100;
+							p37.laserDot.Transparency = 1;
+						end;
+						local v213 = math.clamp((l__Position__210 - v212).magnitude / 200, 0.1, 0.25);
+						p37.laserDot.Size = Vector3.new(v213, v213, v213);
+						p37.laserDot.Position = v212;
+					end;
+				end;
+			end;
+		else
+			p37.modifier = 0.05;
+			if p37.GameplayVariables.Sprinting:GetAttribute("Value") then
+				p37.bobbingSprint.target = p37.isMoving and Vector3.new(math.sin(3 * p37.HorizontalVelocityDelta) * p37.modifier / 1, math.sin(6 * p37.HorizontalVelocityDelta) * p37.modifier / 1, 0) or Vector3.new();
+			else
+				p37.bobbingSprint.target = p37.isMoving and Vector3.new(math.sin(0 * p37.HorizontalVelocityDelta) * p37.modifier, math.sin(0 * p37.HorizontalVelocityDelta) * p37.modifier, 0) or Vector3.new();
+			end;
+			local v214 = 1;
+			if l__CurrentCamera__8.FieldOfView / 70 ~= 1 then
+				v214 = 1.3;
+			end;
+			l__UserInputService__31.MouseDeltaSensitivity = math.clamp(l__CurrentCamera__8.FieldOfView / 70 / v214, 0.05, 1);
+			p37.bobbingSprint:update(p38);
+		end;
+		p37.mainGui.MainFrame.ScreenEffects.Visor.Position = UDim2.new(0.5 + (p37.bobbing.p.X / 3 + p37.bobbingSprint.p.X) / 45, 0, 0.5 + (p37.bobbing.p.Y / 3 + p37.bobbingSprint.p.Y + p37.armTiltJump.p) / 12, 0);
+		p37.mainGui.MainFrame.ScreenEffects.HelmetMask.Position = p37.mainGui.MainFrame.ScreenEffects.Visor.Position;
+		l__CurrentCamera__8.CFrame = l__CurrentCamera__8.CFrame * CFrame.new(-p37.bobbingSprint.p * p37.FrameRateSync) * CFrame.fromEulerAnglesYXZ(p37.bobbingSprint.p.Y / 26 * p37.FrameRateSync + p37.armTiltJump.p * 0.1 * p37.CameraTilt.p * p37.FrameRateSync, -p37.bobbingSprint.p.X / 39 * p37.FrameRateSync, -p37.armTiltJump.p * 0.5 * p37.CameraTilt.p * p37.FrameRateSync);
+		p37.humanoid.CameraOffset = Vector3.new(-p37.LeanAlpha.p * 1.2, math.abs(p37.LeanAlpha.p * 0.16), 0);
+		l__CurrentCamera__8.CFrame = l__CurrentCamera__8.CFrame * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(p37.LeanAlpha.p * 14));
+	end;
+end;
+local u33 = {
+	RangedWeaponDefault = function(p39)
+		if p39.useDebounce == true and p39.FireModes[p39.FireModeIndex] == "Bolt Action" and not p39.clientAnimationTracks.Bolt.IsPlaying then
+			p39:fovUpdate(1, 0.1);
+			p39:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+			if p39.Scope then
+				p39:aim(false);
+			end;
+			if p39.clientAnimationTracks.Use.IsPlaying then
+				wait((p39.clientAnimationTracks.Use.Length - p39.clientAnimationTracks.Use.TimePosition) / 1.4);
+			end;
+			if p39.useDebounce == true and not p39.clientAnimationTracks.Bolt.IsPlaying then
+				if p39.clientAnimationTracks.Bolt then
+					p39.clientAnimationTracks.Bolt:Play();
+				end;
+				if p39.serverAnimationTracks.Bolt then
+					p39.serverAnimationTracks.Bolt:Play();
+				end;
+				wait(p39.settings.CycleTiming[1]);
+				local u34 = nil;
+				coroutine.wrap(function()
+					if p39.settings.EjectionDelay then
+						wait(p39.settings.EjectionDelay);
+					end;
+					if p39.viewModel == p39.viewModel and p39.viewModel.Parent then
+						local l__EjectionPort__215 = p39.viewModel.Item:FindFirstChild("EjectionPort");
+						if l__EjectionPort__215 then
+							if u34 then
+								local v216 = game.ReplicatedStorage.AmmoTypes:FindFirstChild(u34);
+								if v216:FindFirstChild("Casing") then
+									l__EjectionPort__215.Casing.Texture = v216.Casing.Texture;
+								end;
+							end;
+							l__EjectionPort__215.Casing:Emit(1);
+						end;
+					end;
+				end)();
+				u34 = p39.settings;
+				wait(u34.CycleTiming[2]);
+				p39.useDebounce = false;
+				if p39.clientAnimationTracks.Bolt then
+					p39.clientAnimationTracks.Bolt:Stop();
+				end;
+				if p39.serverAnimationTracks.Bolt then
+					p39.serverAnimationTracks.Bolt:Stop();
+				end;
+				if p39.RightMouseDown then
+					p39:aim(true);
+				end;
+			end;
+		end;
+	end
+};
+function v1.action(p40, p41)
+	if p40.isEquipped and u2:IsPlayerAlive(p40.player) and p40.viewModel and p41 then
+		local v217 = true;
+		for v218 = 1, #p40.CancelTables do
+			if p40.CancelTables[v218].Visible == true then
+				v217 = false;
+				break;
+			end;
+		end;
+		if v217 then
+			p40.MouseHeld = true;
+			p40.LeftMouseDown = true;
+			return;
+		end;
+	end;
+	p40.MouseHeld = false;
+	p40.LeftMouseDown = false;
+	if u33[p40.useModuleName] then
+		u33[p40.useModuleName](p40);
+	end;
+end;
+function v1.action2(p42, p43)
+	p42.Mouse2Held = p43;
+	p42:aim(p43, true);
+end;
+function v1.aim(p44, p45, p46, p47)
+	coroutine.wrap(function()
+		if p46 then
+			p44.RightMouseDown = p45;
+		end;
+		if p44.allowAiming then
+			local v219 = p44.VisualSettings:GetAttribute("ToggleADSDof");
+			if p44.clientAnimationTracks.Inspect and p44.clientAnimationTracks.Inspect.IsPlaying and p47 ~= "Cancel" and p47 ~= "Wall" then
+				p44.clientAnimationTracks.Inspect:Stop(0.25);
+				p44.serverAnimationTracks.Inspect:Stop(0.25);
+				p44.WeldedTool.ItemRoot.Inspect:Stop();
+			end;
+			if p45 and p44.isEquipped and u2:IsPlayerAlive(p44.player) and p44.viewModel then
+				local v220 = true;
+				for v221 = 1, #p44.CancelTables do
+					if p44.CancelTables[v221].Visible == true then
+						v220 = false;
+						break;
+					end;
+				end;
+				if v220 then
+					if p44.clientAnimationTracks.Equip and p44.clientAnimationTracks.Equip.IsPlaying and p44.clientAnimationTracks.Equip.TimePosition < p44.clientAnimationTracks.Equip.Length * 0.5 then
+						while p44.viewModel and p44.clientAnimationTracks.Equip.IsPlaying and p44.clientAnimationTracks.Equip.TimePosition < p44.clientAnimationTracks.Equip.Length * 0.5 do
+							wait();						
+						end;
+						if p44.viewModel ~= p44.viewModel or p44.ToolStance == "Aim" or p44.ToolStance == "Ready" or p44.RightMouseDown == false then
+							return;
+						end;
+					end;
+					p44.sprinting = false;
+					p44.rs_Player.Status.GameplayVariables.Sprinting:SetAttribute("Value", p44.sprinting);
+					if (p44.settings.AimWhileActing or p44.reloading ~= true) and p44.useDebounce ~= true then
+						local v222 = nil;
+						local v223 = nil;
+						local v224 = nil;
+						local v225 = nil;
+						local v226 = nil;
+						local v227 = nil;
+						local v228 = nil;
+						local v229 = nil;
+						local v230 = nil;
+						local v231 = nil;
+						local v232 = nil;
+						local v233 = nil;
+						local v234 = nil;
+						local v235 = nil;
+						local v236 = nil;
+						local v237 = nil;
+						local v238 = nil;
+						local v239 = nil;
+						local v240 = nil;
+						local v241 = nil;
+						local v242 = nil;
+						local v243 = nil;
+						local v244 = nil;
+						local v245 = nil;
+						local v246 = nil;
+						local v247 = nil;
+						local v248 = nil;
+						local v249 = nil;
+						local v250 = nil;
+						local v251 = nil;
+						local v252 = nil;
+						local v253 = nil;
+						local v254 = nil;
+						local v255 = nil;
+						local v256 = nil;
+						local v257 = nil;
+						local v258 = nil;
+						local v259 = nil;
+						local v260 = nil;
+						local v261 = nil;
+						local v262 = nil;
+						local v263 = nil;
+						local v264 = nil;
+						local v265 = nil;
+						local v266 = nil;
+						local v267 = nil;
+						local v268 = nil;
+						local v269 = nil;
+						local v270 = nil;
+						local v271 = nil;
+						local v272 = nil;
+						local v273 = nil;
+						local v274 = nil;
+						local v275 = nil;
+						local v276 = nil;
+						local v277 = nil;
+						local v278 = nil;
+						local v279 = nil;
+						local v280 = nil;
+						local v281 = nil;
+						local v282 = nil;
+						local v283 = nil;
+						local v284 = nil;
+						local v285 = nil;
+						local v286 = nil;
+						local v287 = nil;
+						local v288 = nil;
+						local v289 = nil;
+						local v290 = nil;
+						local v291 = nil;
+						local v292 = nil;
+						local v293 = nil;
+						local v294 = nil;
+						local v295 = nil;
+						local v296 = nil;
+						local v297 = nil;
+						local v298 = nil;
+						local v299 = nil;
+						local v300 = nil;
+						local v301 = nil;
+						local v302 = nil;
+						local v303 = nil;
+						local v304 = nil;
+						local v305 = nil;
+						if p44.Scope then
+							if p44.reloading == true then
+								return;
+							end;
+							v222 = p44;
+							v223 = "reloading";
+							v224 = v222;
+							v225 = v223;
+							v226 = v224[v225];
+							v227 = v226;
+							if not v227 then
+								p44:fovUpdate(p44.zoomAmount, 0.3);
+							end;
+							local v306 = p44;
+							v228 = p44;
+							local v307 = "ambientBoost";
+							v229 = v228;
+							v230 = v307;
+							v237 = v229[v230];
+							v231 = p44;
+							local v308 = "nightVisionColor";
+							v232 = v231;
+							v233 = v308;
+							local v309 = v232[v233];
+							local v310 = 0.3;
+							v238 = Enum.EasingStyle.Quart;
+							v239 = Enum.EasingDirection.In;
+							local v311 = "ambientBoostUpdate";
+							v234 = v306;
+							local v312 = v234;
+							v235 = v306;
+							v236 = v311;
+							local v313 = v235[v236];
+							v240 = v313;
+							v241 = v312;
+							v242 = v237;
+							v243 = v309;
+							v244 = v310;
+							v245 = v238;
+							v246 = v239;
+							v240(v241, v242, v243, v244, v245, v246);
+							local v314 = p44;
+							local v315 = "useDof";
+							v247 = v314;
+							v248 = v315;
+							local v316 = v247[v248];
+							v249 = v316;
+							if v249 and v219 then
+								game.Lighting.ADS_DOF.Enabled = true;
+							end;
+							local v317 = game;
+							local v318 = "Lighting";
+							v250 = v317;
+							v251 = v318;
+							local v319 = v250[v251];
+							local v320 = "DDOF";
+							v252 = v319;
+							v253 = v320;
+							local v321 = v252[v253];
+							local v322 = false;
+							local v323 = "Enabled";
+							v254 = v321;
+							v255 = v323;
+							v256 = v322;
+							v254[v255] = v256;
+							local v324 = tick;
+							v257 = v324;
+							local v325 = v257();
+							local v326 = p44;
+							local v327 = "Aim";
+							local v328 = "ToolStance";
+							v258 = v326;
+							v259 = v328;
+							v260 = v327;
+							v258[v259] = v260;
+							local v329 = p44;
+							local v330 = 0;
+							local v331 = 0;
+							local v332 = "updateSway";
+							v261 = v329;
+							local v333 = v261;
+							v262 = v329;
+							v263 = v332;
+							local v334 = v262[v263];
+							v264 = v334;
+							v265 = v333;
+							v266 = v330;
+							v267 = v331;
+							v264(v265, v266, v267);
+							local v335 = p44;
+							local v336 = "ReSizeScope";
+							v268 = v335;
+							v269 = v336;
+							local v337 = v268[v269];
+							local v338 = 0;
+							v270 = v337;
+							v271 = v338;
+							if v270 ~= v271 then
+								local v339 = p44.viewModel:GetDescendants();
+								for v340 = 1, #v339 do
+									if v339[v340]:IsA("BasePart") and v339[v340]:FindFirstChild("ScopePart") then
+										local v341 = v339[v340].Size;
+										local v342 = v341;
+										if v339[v340]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+											v339[v340]:FindFirstChild("ScopePart").Value = v339[v340].Size;
+										else
+											v341 = v339[v340]:FindFirstChild("ScopePart").Value;
+										end;
+										if p44.ReSizeScopeVector == "X" then
+											v342 = Vector3.new(v341.X / p44.ReSizeScope, v341.Y, v341.Z);
+										elseif p44.ReSizeScopeVector == "Z" then
+											v342 = Vector3.new(v341.X, v341.Y, v341.Z / p44.ReSizeScope);
+										end;
+										l__TweenService__30:Create(v339[v340], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+											Size = v342
+										}):Play();
+									end;
+								end;
+							end;
+							local v343 = p44;
+							local v344 = "WeldedTool";
+							v272 = v343;
+							v273 = v344;
+							local v345 = v272[v273];
+							local v346 = "ItemRoot";
+							v274 = v345;
+							v275 = v346;
+							local v347 = v274[v275];
+							local v348 = "Aim";
+							local v349 = "FindFirstChild";
+							v276 = v347;
+							local v350 = v276;
+							v277 = v347;
+							v278 = v349;
+							local v351 = v277[v278];
+							v279 = v351;
+							v280 = v350;
+							v281 = v348;
+							local v352 = v279(v280, v281);
+							v282 = v352;
+							if v282 then
+								u2:PlaySoundV2(p44.WeldedTool.ItemRoot.Aim, nil, p44.SoundsTemp);
+								l__SoundServiceEvent__13:FireServer(p44.WeldedTool.ItemRoot.Aim);
+							end;
+							local v353 = p44;
+							local v354 = "serverAnimationTracks";
+							v283 = v353;
+							v284 = v354;
+							local v355 = v283[v284];
+							local v356 = "Aim";
+							v285 = v355;
+							v286 = v356;
+							local v357 = v285[v286];
+							v287 = v357;
+							if v287 then
+								p44.serverAnimationTracks.Aim:Play();
+							end;
+							local v358 = p44;
+							local v359 = "clientAnimationTracks";
+							v288 = v358;
+							v289 = v359;
+							local v360 = v288[v289];
+							local v361 = "Aim";
+							v290 = v360;
+							v291 = v361;
+							local v362 = v290[v291];
+							v292 = v362;
+							if v292 then
+								p44.clientAnimationTracks.Aim:Play();
+							end;
+							local v363 = p44;
+							local v364 = "aimPart";
+							v293 = v363;
+							v294 = v364;
+							local v365 = v293[v294];
+							v295 = v365;
+							if v295 then
+								l__TweenService__30:Create(p44.TempCFrame, TweenInfo.new(p44.AimInSpeed, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+									Value = (p44.aimPart.CFrame * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(p44.aimingLeanRotation))):ToObjectSpace(p44.viewModel.HumanoidRootPart.CFrame)
+								}):Play();
+							end;
+							local v366 = p44;
+							local v367 = "Scope";
+							v296 = v366;
+							v297 = v367;
+							local v368 = v296[v297];
+							v298 = v368;
+							if v298 and (p44.GameplaySettings:GetAttribute("ToggleSightRenderMode") == true or not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight")) then
+								coroutine.wrap(function()
+									local v369 = tick();
+									while true do
+										if p44.ToolStance == "Aim" and p44.isEquipped == true then
+											local v370 = true;
+											for v371 = 1, #p44.CancelTables do
+												if p44.CancelTables[v371].Visible == true then
+													v370 = false;
+													break;
+												end;
+											end;
+											if not v370 then
+												if p44.ToolStance ~= "Ready" then
+													break;
+												end;
+												if p44.isEquipped ~= true then
+													break;
+												end;
+												local v372 = true;
+												for v373 = 1, #p44.CancelTables do
+													if p44.CancelTables[v373].Visible == true then
+														v372 = false;
+														break;
+													end;
+												end;
+												if not v372 then
+													break;
+												end;
+											end;
+										else
+											if p44.ToolStance ~= "Ready" then
+												break;
+											end;
+											if p44.isEquipped ~= true then
+												break;
+											end;
+											v372 = true;
+											for v373 = 1, #p44.CancelTables do
+												if p44.CancelTables[v373].Visible == true then
+													v372 = false;
+													break;
+												end;
+											end;
+											if not v372 then
+												break;
+											end;
+										end;
+										wait();
+										if p44.AimInSpeed * 0.14 < tick() - v369 then
+											break;
+										end;									
+									end;
+									if p44.ToolStance == "Aim" and p44.isEquipped == true then
+										local v374 = true;
+										for v375 = 1, #p44.CancelTables do
+											if p44.CancelTables[v375].Visible == true then
+												v374 = false;
+												break;
+											end;
+										end;
+										if not v374 then
+											if p44.ToolStance == "Ready" and p44.isEquipped == true then
+												local v376 = true;
+												for v377 = 1, #p44.CancelTables do
+													if p44.CancelTables[v377].Visible == true then
+														v376 = false;
+														break;
+													end;
+												end;
+												if v376 then
+													if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+														p44.sight.Reticle.PrismScopeGui.Enabled = true;
+													end;
+													if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+														local v378 = p44.viewModel:GetDescendants();
+														for v379 = 1, #v378 do
+															if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+																v378[v379].Transparency = 1;
+															end;
+														end;
+													end;
+												end;
+											end;
+										else
+											if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+												p44.sight.Reticle.PrismScopeGui.Enabled = true;
+											end;
+											if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+												v378 = p44.viewModel:GetDescendants();
+												for v379 = 1, #v378 do
+													if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+														v378[v379].Transparency = 1;
+													end;
+												end;
+											end;
+										end;
+									elseif p44.ToolStance == "Ready" and p44.isEquipped == true then
+										v376 = true;
+										for v377 = 1, #p44.CancelTables do
+											if p44.CancelTables[v377].Visible == true then
+												v376 = false;
+												break;
+											end;
+										end;
+										if v376 then
+											if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+												p44.sight.Reticle.PrismScopeGui.Enabled = true;
+											end;
+											if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+												v378 = p44.viewModel:GetDescendants();
+												for v379 = 1, #v378 do
+													if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+														v378[v379].Transparency = 1;
+													end;
+												end;
+											end;
+										end;
+									end;
+								end)();
+							end;
+							while p44.ToolStance == "Aim" and p44.isEquipped == true do
+								local v380 = true;
+								for v381 = 1, #p44.CancelTables do
+									if p44.CancelTables[v381].Visible == true then
+										v380 = false;
+										break;
+									end;
+								end;
+								if not v380 then
+									break;
+								end;
+								wait();
+								if p44.AimInSpeed * p44.AimReadyTime < tick() - v325 then
+									break;
+								end;							
+							end;
+							local v382 = p44;
+							local v383 = "ToolStance";
+							v299 = v382;
+							v300 = v383;
+							local v384 = v299[v300];
+							local v385 = "Aim";
+							v301 = v384;
+							v302 = v385;
+							if v301 == v302 and p44.isEquipped == true then
+								local v386 = true;
+								for v387 = 1, #p44.CancelTables do
+									if p44.CancelTables[v387].Visible == true then
+										v386 = false;
+										break;
+									end;
+								end;
+								if v386 then
+									p44.isAiming = true;
+									p44:updateSway(0, 0);
+									p44.ToolStance = "Ready";
+									if p44.RecoilTiltHorizontal.target.X > 0 or p44.RecoilTiltHorizontal.target.X < 0 then
+										p44.RecoilTiltHorizontal.target = p44.RecoilTiltHorizontal.target / 8;
+									end;
+								end;
+							end;
+							while p44.isAiming and p44.isEquipped == true do
+								local v388 = true;
+								for v389 = 1, #p44.CancelTables do
+									if p44.CancelTables[v389].Visible == true then
+										v388 = false;
+										break;
+									end;
+								end;
+								if not v388 then
+									break;
+								end;
+								wait();
+								if p44.AimInSpeed - 0.17 < tick() - v325 then
+									break;
+								end;							
+							end;
+							local v390 = p44;
+							local v391 = "isAiming";
+							v303 = v390;
+							v304 = v391;
+							local v392 = v303[v304];
+							v305 = v392;
+							if v305 and p44.isEquipped == true then
+								local v393 = true;
+								for v394 = 1, #p44.CancelTables do
+									if p44.CancelTables[v394].Visible == true then
+										v393 = false;
+										break;
+									end;
+								end;
+								if v393 then
+									if p44.serverAnimationTracks.Aim then
+										p44.serverAnimationTracks.Aim:AdjustSpeed(0);
+									end;
+									if p44.clientAnimationTracks.Aim then
+										p44.clientAnimationTracks.Aim:AdjustSpeed(0);
+										return;
+									end;
+								end;
+							end;
+						else
+							v222 = p44;
+							v223 = "reloading";
+							v224 = v222;
+							v225 = v223;
+							v226 = v224[v225];
+							v227 = v226;
+							if not v227 then
+								p44:fovUpdate(p44.zoomAmount, 0.3);
+							end;
+							v306 = p44;
+							v228 = p44;
+							v307 = "ambientBoost";
+							v229 = v228;
+							v230 = v307;
+							v237 = v229[v230];
+							v231 = p44;
+							v308 = "nightVisionColor";
+							v232 = v231;
+							v233 = v308;
+							v309 = v232[v233];
+							v310 = 0.3;
+							v238 = Enum.EasingStyle.Quart;
+							v239 = Enum.EasingDirection.In;
+							v311 = "ambientBoostUpdate";
+							v234 = v306;
+							v312 = v234;
+							v235 = v306;
+							v236 = v311;
+							v313 = v235[v236];
+							v240 = v313;
+							v241 = v312;
+							v242 = v237;
+							v243 = v309;
+							v244 = v310;
+							v245 = v238;
+							v246 = v239;
+							v240(v241, v242, v243, v244, v245, v246);
+							v314 = p44;
+							v315 = "useDof";
+							v247 = v314;
+							v248 = v315;
+							v316 = v247[v248];
+							v249 = v316;
+							if v249 and v219 then
+								game.Lighting.ADS_DOF.Enabled = true;
+							end;
+							v317 = game;
+							v318 = "Lighting";
+							v250 = v317;
+							v251 = v318;
+							v319 = v250[v251];
+							v320 = "DDOF";
+							v252 = v319;
+							v253 = v320;
+							v321 = v252[v253];
+							v322 = false;
+							v323 = "Enabled";
+							v254 = v321;
+							v255 = v323;
+							v256 = v322;
+							v254[v255] = v256;
+							v324 = tick;
+							v257 = v324;
+							v325 = v257();
+							v326 = p44;
+							v327 = "Aim";
+							v328 = "ToolStance";
+							v258 = v326;
+							v259 = v328;
+							v260 = v327;
+							v258[v259] = v260;
+							v329 = p44;
+							v330 = 0;
+							v331 = 0;
+							v332 = "updateSway";
+							v261 = v329;
+							v333 = v261;
+							v262 = v329;
+							v263 = v332;
+							v334 = v262[v263];
+							v264 = v334;
+							v265 = v333;
+							v266 = v330;
+							v267 = v331;
+							v264(v265, v266, v267);
+							v335 = p44;
+							v336 = "ReSizeScope";
+							v268 = v335;
+							v269 = v336;
+							v337 = v268[v269];
+							v338 = 0;
+							v270 = v337;
+							v271 = v338;
+							if v270 ~= v271 then
+								v339 = p44.viewModel:GetDescendants();
+								for v340 = 1, #v339 do
+									if v339[v340]:IsA("BasePart") and v339[v340]:FindFirstChild("ScopePart") then
+										v341 = v339[v340].Size;
+										v342 = v341;
+										if v339[v340]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+											v339[v340]:FindFirstChild("ScopePart").Value = v339[v340].Size;
+										else
+											v341 = v339[v340]:FindFirstChild("ScopePart").Value;
+										end;
+										if p44.ReSizeScopeVector == "X" then
+											v342 = Vector3.new(v341.X / p44.ReSizeScope, v341.Y, v341.Z);
+										elseif p44.ReSizeScopeVector == "Z" then
+											v342 = Vector3.new(v341.X, v341.Y, v341.Z / p44.ReSizeScope);
+										end;
+										l__TweenService__30:Create(v339[v340], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+											Size = v342
+										}):Play();
+									end;
+								end;
+							end;
+							v343 = p44;
+							v344 = "WeldedTool";
+							v272 = v343;
+							v273 = v344;
+							v345 = v272[v273];
+							v346 = "ItemRoot";
+							v274 = v345;
+							v275 = v346;
+							v347 = v274[v275];
+							v348 = "Aim";
+							v349 = "FindFirstChild";
+							v276 = v347;
+							v350 = v276;
+							v277 = v347;
+							v278 = v349;
+							v351 = v277[v278];
+							v279 = v351;
+							v280 = v350;
+							v281 = v348;
+							v352 = v279(v280, v281);
+							v282 = v352;
+							if v282 then
+								u2:PlaySoundV2(p44.WeldedTool.ItemRoot.Aim, nil, p44.SoundsTemp);
+								l__SoundServiceEvent__13:FireServer(p44.WeldedTool.ItemRoot.Aim);
+							end;
+							v353 = p44;
+							v354 = "serverAnimationTracks";
+							v283 = v353;
+							v284 = v354;
+							v355 = v283[v284];
+							v356 = "Aim";
+							v285 = v355;
+							v286 = v356;
+							v357 = v285[v286];
+							v287 = v357;
+							if v287 then
+								p44.serverAnimationTracks.Aim:Play();
+							end;
+							v358 = p44;
+							v359 = "clientAnimationTracks";
+							v288 = v358;
+							v289 = v359;
+							v360 = v288[v289];
+							v361 = "Aim";
+							v290 = v360;
+							v291 = v361;
+							v362 = v290[v291];
+							v292 = v362;
+							if v292 then
+								p44.clientAnimationTracks.Aim:Play();
+							end;
+							v363 = p44;
+							v364 = "aimPart";
+							v293 = v363;
+							v294 = v364;
+							v365 = v293[v294];
+							v295 = v365;
+							if v295 then
+								l__TweenService__30:Create(p44.TempCFrame, TweenInfo.new(p44.AimInSpeed, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+									Value = (p44.aimPart.CFrame * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(p44.aimingLeanRotation))):ToObjectSpace(p44.viewModel.HumanoidRootPart.CFrame)
+								}):Play();
+							end;
+							v366 = p44;
+							v367 = "Scope";
+							v296 = v366;
+							v297 = v367;
+							v368 = v296[v297];
+							v298 = v368;
+							if v298 and (p44.GameplaySettings:GetAttribute("ToggleSightRenderMode") == true or not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight")) then
+								coroutine.wrap(function()
+									v369 = tick();
+									while true do
+										if p44.ToolStance == "Aim" and p44.isEquipped == true then
+											v370 = true;
+											for v371 = 1, #p44.CancelTables do
+												if p44.CancelTables[v371].Visible == true then
+													v370 = false;
+													break;
+												end;
+											end;
+											if not v370 then
+												if p44.ToolStance ~= "Ready" then
+													break;
+												end;
+												if p44.isEquipped ~= true then
+													break;
+												end;
+												v372 = true;
+												for v373 = 1, #p44.CancelTables do
+													if p44.CancelTables[v373].Visible == true then
+														v372 = false;
+														break;
+													end;
+												end;
+												if not v372 then
+													break;
+												end;
+											end;
+										else
+											if p44.ToolStance ~= "Ready" then
+												break;
+											end;
+											if p44.isEquipped ~= true then
+												break;
+											end;
+											v372 = true;
+											for v373 = 1, #p44.CancelTables do
+												if p44.CancelTables[v373].Visible == true then
+													v372 = false;
+													break;
+												end;
+											end;
+											if not v372 then
+												break;
+											end;
+										end;
+										wait();
+										if p44.AimInSpeed * 0.14 < tick() - v369 then
+											break;
+										end;									
+									end;
+									if p44.ToolStance == "Aim" and p44.isEquipped == true then
+										v374 = true;
+										for v375 = 1, #p44.CancelTables do
+											if p44.CancelTables[v375].Visible == true then
+												v374 = false;
+												break;
+											end;
+										end;
+										if not v374 then
+											if p44.ToolStance == "Ready" and p44.isEquipped == true then
+												v376 = true;
+												for v377 = 1, #p44.CancelTables do
+													if p44.CancelTables[v377].Visible == true then
+														v376 = false;
+														break;
+													end;
+												end;
+												if v376 then
+													if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+														p44.sight.Reticle.PrismScopeGui.Enabled = true;
+													end;
+													if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+														v378 = p44.viewModel:GetDescendants();
+														for v379 = 1, #v378 do
+															if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+																v378[v379].Transparency = 1;
+															end;
+														end;
+													end;
+												end;
+											end;
+										else
+											if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+												p44.sight.Reticle.PrismScopeGui.Enabled = true;
+											end;
+											if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+												v378 = p44.viewModel:GetDescendants();
+												for v379 = 1, #v378 do
+													if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+														v378[v379].Transparency = 1;
+													end;
+												end;
+											end;
+										end;
+									elseif p44.ToolStance == "Ready" and p44.isEquipped == true then
+										v376 = true;
+										for v377 = 1, #p44.CancelTables do
+											if p44.CancelTables[v377].Visible == true then
+												v376 = false;
+												break;
+											end;
+										end;
+										if v376 then
+											if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+												p44.sight.Reticle.PrismScopeGui.Enabled = true;
+											end;
+											if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+												v378 = p44.viewModel:GetDescendants();
+												for v379 = 1, #v378 do
+													if v378[v379]:IsA("BasePart") and v378[v379].Name ~= "Reticle" then
+														v378[v379].Transparency = 1;
+													end;
+												end;
+											end;
+										end;
+									end;
+								end)();
+							end;
+							while true do
+								v380 = true;
+								for v381 = 1, #p44.CancelTables do
+									if p44.CancelTables[v381].Visible == true then
+										v380 = false;
+										break;
+									end;
+								end;
+								if not v380 then
+									break;
+								end;
+								wait();
+								if p44.AimInSpeed * p44.AimReadyTime < tick() - v325 then
+									break;
+								end;							
+							end;
+							v382 = p44;
+							v383 = "ToolStance";
+							v299 = v382;
+							v300 = v383;
+							v384 = v299[v300];
+							v385 = "Aim";
+							v301 = v384;
+							v302 = v385;
+							if v301 == v302 and p44.isEquipped == true then
+								v386 = true;
+								for v387 = 1, #p44.CancelTables do
+									if p44.CancelTables[v387].Visible == true then
+										v386 = false;
+										break;
+									end;
+								end;
+								if v386 then
+									p44.isAiming = true;
+									p44:updateSway(0, 0);
+									p44.ToolStance = "Ready";
+									if p44.RecoilTiltHorizontal.target.X > 0 or p44.RecoilTiltHorizontal.target.X < 0 then
+										p44.RecoilTiltHorizontal.target = p44.RecoilTiltHorizontal.target / 8;
+									end;
+								end;
+							end;
+							while true do
+								v388 = true;
+								for v389 = 1, #p44.CancelTables do
+									if p44.CancelTables[v389].Visible == true then
+										v388 = false;
+										break;
+									end;
+								end;
+								if not v388 then
+									break;
+								end;
+								wait();
+								if p44.AimInSpeed - 0.17 < tick() - v325 then
+									break;
+								end;							
+							end;
+							v390 = p44;
+							v391 = "isAiming";
+							v303 = v390;
+							v304 = v391;
+							v392 = v303[v304];
+							v305 = v392;
+							if v305 and p44.isEquipped == true then
+								v393 = true;
+								for v394 = 1, #p44.CancelTables do
+									if p44.CancelTables[v394].Visible == true then
+										v393 = false;
+										break;
+									end;
+								end;
+								if v393 then
+									if p44.serverAnimationTracks.Aim then
+										p44.serverAnimationTracks.Aim:AdjustSpeed(0);
+									end;
+									if p44.clientAnimationTracks.Aim then
+										p44.clientAnimationTracks.Aim:AdjustSpeed(0);
+										return;
+									end;
+								end;
+							end;
+						end;
+					else
+						return;
+					end;
+				elseif p44.isEquipped == true then
+					if p44.isAiming and p44.WeldedTool.ItemRoot:FindFirstChild("UnAim") then
+						u2:PlaySoundV2(p44.WeldedTool.ItemRoot.UnAim, nil, p44.SoundsTemp);
+						l__SoundServiceEvent__13:FireServer(p44.WeldedTool.ItemRoot.UnAim);
+					end;
+					p44:fovUpdate(1, 0.3);
+					p44:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+					p44.ToolStance = "Idle";
+					p44.isAiming = false;
+					if p44.Scope then
+						if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+							p44.sight.Reticle.PrismScopeGui.Enabled = false;
+						end;
+						if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+							local v395 = p44.viewModel:GetDescendants();
+							for v396 = 1, #v395 do
+								if v395[v396]:IsA("BasePart") then
+									v395[v396].Transparency = v395[v396]:GetAttribute("OriginalTransparency");
+								end;
+							end;
+						end;
+						if p44.aimPart.Parent:FindFirstChild("Dot") then
+							p44.aimPart.Parent.Dot.SurfaceGui.Enabled = false;
+						end;
+					end;
+					if p44.ReSizeScope ~= 0 then
+						local v397 = p44.viewModel:GetDescendants();
+						for v398 = 1, #v397 do
+							if v397[v398]:IsA("BasePart") and v397[v398]:FindFirstChild("ScopePart") then
+								local v399 = v397[v398].Size;
+								if v397[v398]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+									v397[v398]:FindFirstChild("ScopePart").Value = v397[v398].Size;
+								else
+									v399 = v397[v398]:FindFirstChild("ScopePart").Value;
+								end;
+								l__TweenService__30:Create(v397[v398], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+									Size = Vector3.new(v399.X, v399.Y, v399.Z)
+								}):Play();
+							end;
+						end;
+					end;
+					if p44.useDof then
+						game.Lighting.ADS_DOF.Enabled = false;
+					end;
+					game.Lighting.DDOF.Enabled = true;
+					if p44.aimPart then
+						l__TweenService__30:Create(p44.TempCFrame, TweenInfo.new(p44.AimOutSpeed, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+							Value = p44.weaponOffSet
+						}):Play();
+					end;
+					if p44.serverAnimationTracks.Aim then
+						p44.serverAnimationTracks.Aim:AdjustSpeed(-1.5);
+					end;
+					if p44.clientAnimationTracks.Aim then
+						p44.clientAnimationTracks.Aim:AdjustSpeed(-1.5);
+						return;
+					end;
+				end;
+			elseif p44.isEquipped == true then
+				if p44.isAiming and p44.WeldedTool.ItemRoot:FindFirstChild("UnAim") then
+					u2:PlaySoundV2(p44.WeldedTool.ItemRoot.UnAim, nil, p44.SoundsTemp);
+					l__SoundServiceEvent__13:FireServer(p44.WeldedTool.ItemRoot.UnAim);
+				end;
+				p44:fovUpdate(1, 0.3);
+				p44:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+				p44.ToolStance = "Idle";
+				p44.isAiming = false;
+				if p44.Scope then
+					if p44.sight.Reticle:FindFirstChild("PrismScopeGui") then
+						p44.sight.Reticle.PrismScopeGui.Enabled = false;
+					end;
+					if not p44.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p44.Scope):FindFirstChild("Sight") then
+						v395 = p44.viewModel:GetDescendants();
+						for v396 = 1, #v395 do
+							if v395[v396]:IsA("BasePart") then
+								v395[v396].Transparency = v395[v396]:GetAttribute("OriginalTransparency");
+							end;
+						end;
+					end;
+					if p44.aimPart.Parent:FindFirstChild("Dot") then
+						p44.aimPart.Parent.Dot.SurfaceGui.Enabled = false;
+					end;
+				end;
+				if p44.ReSizeScope ~= 0 then
+					v397 = p44.viewModel:GetDescendants();
+					for v398 = 1, #v397 do
+						if v397[v398]:IsA("BasePart") and v397[v398]:FindFirstChild("ScopePart") then
+							v399 = v397[v398].Size;
+							if v397[v398]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+								v397[v398]:FindFirstChild("ScopePart").Value = v397[v398].Size;
+							else
+								v399 = v397[v398]:FindFirstChild("ScopePart").Value;
+							end;
+							l__TweenService__30:Create(v397[v398], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+								Size = Vector3.new(v399.X, v399.Y, v399.Z)
+							}):Play();
+						end;
+					end;
+				end;
+				if p44.useDof then
+					game.Lighting.ADS_DOF.Enabled = false;
+				end;
+				game.Lighting.DDOF.Enabled = true;
+				if p44.aimPart then
+					l__TweenService__30:Create(p44.TempCFrame, TweenInfo.new(p44.AimOutSpeed, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+						Value = p44.weaponOffSet
+					}):Play();
+				end;
+				if p44.serverAnimationTracks.Aim then
+					p44.serverAnimationTracks.Aim:AdjustSpeed(-1.5);
+				end;
+				if p44.clientAnimationTracks.Aim then
+					p44.clientAnimationTracks.Aim:AdjustSpeed(-1.5);
+					return;
+				end;
+			end;
+		elseif p46 and useTypes2[p44.useModuleName] then
+			local v400 = true;
+			for v401 = 1, #p44.CancelTables do
+				if p44.CancelTables[v401].Visible == true then
+					v400 = false;
+					break;
+				end;
+			end;
+			if v400 and p47 ~= "Cancel" then
+				p44.clientAnimationTracks.Inspect:Stop(0.25);
+				p44.serverAnimationTracks.Inspect:Stop(0.25);
+				p44.WeldedTool.ItemRoot.Inspect:Stop();
+				useTypes2[p44.useModuleName](p44);
+			end;
+		end;
+	end)();
+end;
+function v1.reload(p48, p49)
+	if p48.viewModel then
+		if p48.viewModel.Item:FindFirstChild("AmmoTypes") then
+			local l__Value__402 = p48.weapon.ItemProperties.AmmoType.Value;
+			local v403 = p48.viewModel.Item.AmmoTypes:GetChildren();
+			for v404 = 1, #v403 do
+				v403[v404].Transparency = 1;
+			end;
+			p48.viewModel.Item.AmmoTypes:FindFirstChild(l__Value__402).Transparency = 0;
+			if p48.viewModel.Item:FindFirstChild("AmmoTypes2") then
+				local v405 = p48.viewModel.Item.AmmoTypes2:GetChildren();
+				for v406 = 1, #v405 do
+					v405[v406].Transparency = 1;
+				end;
+				p48.viewModel.Item.AmmoTypes2:FindFirstChild(l__Value__402).Transparency = 0;
+			end;
+		end;
+		if p48.reloading == false and p48.cancellingReload == false and p48.MaxAmmo > 0 then
+			local v407 = true;
+			for v408 = 1, #p48.CancelTables do
+				if p48.CancelTables[v408].Visible == true then
+					v407 = false;
+					break;
+				end;
+			end;
+			if v407 then
+				if p48.clientAnimationTracks.Inspect then
+					p48.clientAnimationTracks.Inspect:Stop();
+					p48.serverAnimationTracks.Inspect:Stop();
+					p48.WeldedTool.ItemRoot.Inspect:Stop();
+				end;
+				if not p48.settings.AimWhileActing and p48.isAiming then
+					p48:aim(false);
+				end;
+				if v81[p48.reloadType] then
+					v81[p48.reloadType](p48, p49);
+				end;
+			end;
+		end;
+	end;
+end;
+local l__ChangeFireMode__35 = game.ReplicatedStorage.Remotes.ChangeFireMode;
+function v1.fireMode(p50)
+	if p50.FireModes and #p50.FireModes > 1 then
+		local v409 = p50.FireModeIndex + 1;
+		if #p50.FireModes < v409 then
+			v409 = 1;
+		end;
+		u2:PlaySoundV2(p50.WeldedTool.ItemRoot.FireSelector, nil, p50.SoundsTemp);
+		l__SoundServiceEvent__13:FireServer(p50.WeldedTool.ItemRoot.FireSelector);
+		p50.weapon.ItemProperties:SetAttribute("FireMode", p50.FireModes[v409]);
+		p50.weapon.ItemProperties:SetAttribute("FireModeIndex", v409);
+		p50.FireModeIndex = v409;
+		l__ChangeFireMode__35:FireServer(p50.weapon, p50.FireModeIndex);
+	end;
+end;
+function v1.cycleSight(p51)
+	local v410 = p51.SightCycleIndex + 1;
+	if #p51.aimParts < v410 then
+		v410 = 1;
+	end;
+	if p51.SightCycleIndex ~= v410 and p51.sight and p51.ReSizeScope ~= 0 then
+		local v411 = p51.viewModel:GetDescendants();
+		for v412 = 1, #v411 do
+			if v411[v412]:IsA("BasePart") and v411[v412]:FindFirstChild("ScopePart") then
+				local v413 = v411[v412].Size;
+				if v411[v412]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+					v411[v412]:FindFirstChild("ScopePart").Value = v411[v412].Size;
+				else
+					v413 = v411[v412]:FindFirstChild("ScopePart").Value;
+				end;
+				l__TweenService__30:Create(v411[v412], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+					Size = Vector3.new(v413.X, v413.Y, v413.Z)
+				}):Play();
+			end;
+		end;
+	end;
+	if p51.SightCycleIndex ~= v410 and p51.sight and p51.sight.Reticle:FindFirstChild("ScopeGui") then
+		p51.sight.Reticle.ScopeGui.Enabled = false;
+	end;
+	if p51.SightCycleIndex ~= v410 and p51.Scope then
+		if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+			p51.sight.Reticle.PrismScopeGui.Enabled = false;
+		end;
+		if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+			local v414 = p51.viewModel:GetDescendants();
+			for v415 = 1, #v414 do
+				if v414[v415]:IsA("BasePart") then
+					v414[v415].Transparency = v414[v415]:GetAttribute("OriginalTransparency");
+				end;
+			end;
+		end;
+	end;
+	p51.aimPart = p51.aimParts[v410].AimPart;
+	p51.sight = p51.aimParts[v410].Sight;
+	p51.Scope = p51.aimParts[v410].Scope;
+	p51.ReSizeScope = p51.aimParts[v410].ReSizeScope;
+	p51.ReSizeScopeVector = p51.aimParts[v410].ReSizeScopeVector;
+	p51.zoomAmount = p51.aimParts[v410].ZoomAmount;
+	p51.ambientBoost = p51.aimParts[v410].AmbientBoost;
+	p51.nightVisionColor = p51.aimParts[v410].NightVisionColor;
+	if p51.ToolStance == "Aim" and p51.isEquipped == true then
+		local v416 = true;
+		for v417 = 1, #p51.CancelTables do
+			if p51.CancelTables[v417].Visible == true then
+				v416 = false;
+				break;
+			end;
+		end;
+		if not v416 then
+			if p51.ToolStance == "Ready" and p51.isEquipped == true then
+				local v418 = true;
+				for v419 = 1, #p51.CancelTables do
+					if p51.CancelTables[v419].Visible == true then
+						v418 = false;
+						break;
+					end;
+				end;
+				if v418 then
+					p51:fovUpdate(p51.zoomAmount, 0.3);
+					p51:ambientBoostUpdate(p51.ambientBoost, p51.nightVisionColor, 0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In);
+					if p51.WeldedTool.ItemRoot:FindFirstChild("Aim") then
+						u2:PlaySoundV2(p51.WeldedTool.ItemRoot.Aim, nil, p51.SoundsTemp);
+						l__SoundServiceEvent__13:FireServer(p51.WeldedTool.ItemRoot.Aim);
+					end;
+					if p51.SightCycleIndex ~= v410 and p51.ReSizeScope ~= 0 then
+						local v420 = p51.viewModel:GetDescendants();
+						for v421 = 1, #v420 do
+							if v420[v421]:IsA("BasePart") and v420[v421]:FindFirstChild("ScopePart") then
+								local v422 = v420[v421].Size;
+								local v423 = v422;
+								if v420[v421]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+									v420[v421]:FindFirstChild("ScopePart").Value = v420[v421].Size;
+								else
+									v422 = v420[v421]:FindFirstChild("ScopePart").Value;
+								end;
+								if p51.ReSizeScopeVector == "X" then
+									v423 = Vector3.new(v422.X / p51.ReSizeScope, v422.Y, v422.Z);
+								elseif p51.ReSizeScopeVector == "Z" then
+									v423 = Vector3.new(v422.X, v422.Y, v422.Z / p51.ReSizeScope);
+								end;
+								l__TweenService__30:Create(v420[v421], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+									Size = v423
+								}):Play();
+							end;
+						end;
+					end;
+				end;
+			end;
+		else
+			p51:fovUpdate(p51.zoomAmount, 0.3);
+			p51:ambientBoostUpdate(p51.ambientBoost, p51.nightVisionColor, 0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In);
+			if p51.WeldedTool.ItemRoot:FindFirstChild("Aim") then
+				u2:PlaySoundV2(p51.WeldedTool.ItemRoot.Aim, nil, p51.SoundsTemp);
+				l__SoundServiceEvent__13:FireServer(p51.WeldedTool.ItemRoot.Aim);
+			end;
+			if p51.SightCycleIndex ~= v410 and p51.ReSizeScope ~= 0 then
+				v420 = p51.viewModel:GetDescendants();
+				for v421 = 1, #v420 do
+					if v420[v421]:IsA("BasePart") and v420[v421]:FindFirstChild("ScopePart") then
+						v422 = v420[v421].Size;
+						v423 = v422;
+						if v420[v421]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+							v420[v421]:FindFirstChild("ScopePart").Value = v420[v421].Size;
+						else
+							v422 = v420[v421]:FindFirstChild("ScopePart").Value;
+						end;
+						if p51.ReSizeScopeVector == "X" then
+							v423 = Vector3.new(v422.X / p51.ReSizeScope, v422.Y, v422.Z);
+						elseif p51.ReSizeScopeVector == "Z" then
+							v423 = Vector3.new(v422.X, v422.Y, v422.Z / p51.ReSizeScope);
+						end;
+						l__TweenService__30:Create(v420[v421], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+							Size = v423
+						}):Play();
+					end;
+				end;
+			end;
+		end;
+	elseif p51.ToolStance == "Ready" and p51.isEquipped == true then
+		v418 = true;
+		for v419 = 1, #p51.CancelTables do
+			if p51.CancelTables[v419].Visible == true then
+				v418 = false;
+				break;
+			end;
+		end;
+		if v418 then
+			p51:fovUpdate(p51.zoomAmount, 0.3);
+			p51:ambientBoostUpdate(p51.ambientBoost, p51.nightVisionColor, 0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In);
+			if p51.WeldedTool.ItemRoot:FindFirstChild("Aim") then
+				u2:PlaySoundV2(p51.WeldedTool.ItemRoot.Aim, nil, p51.SoundsTemp);
+				l__SoundServiceEvent__13:FireServer(p51.WeldedTool.ItemRoot.Aim);
+			end;
+			if p51.SightCycleIndex ~= v410 and p51.ReSizeScope ~= 0 then
+				v420 = p51.viewModel:GetDescendants();
+				for v421 = 1, #v420 do
+					if v420[v421]:IsA("BasePart") and v420[v421]:FindFirstChild("ScopePart") then
+						v422 = v420[v421].Size;
+						v423 = v422;
+						if v420[v421]:FindFirstChild("ScopePart").Value == Vector3.new(0, 0, 0) then
+							v420[v421]:FindFirstChild("ScopePart").Value = v420[v421].Size;
+						else
+							v422 = v420[v421]:FindFirstChild("ScopePart").Value;
+						end;
+						if p51.ReSizeScopeVector == "X" then
+							v423 = Vector3.new(v422.X / p51.ReSizeScope, v422.Y, v422.Z);
+						elseif p51.ReSizeScopeVector == "Z" then
+							v423 = Vector3.new(v422.X, v422.Y, v422.Z / p51.ReSizeScope);
+						end;
+						l__TweenService__30:Create(v420[v421], TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
+							Size = v423
+						}):Play();
+					end;
+				end;
+			end;
+		end;
+	end;
+	if p51.SightCycleIndex ~= v410 and p51.sight and p51.sight.Reticle:FindFirstChild("ScopeGui") then
+		p51.sight.Reticle.ScopeGui.Enabled = true;
+	end;
+	if p51.SightCycleIndex ~= v410 and p51.Scope then
+		local l__Scope__36 = p51.Scope;
+		coroutine.wrap(function()
+			while l__Scope__36 == p51.Scope do
+				wait(0.1);
+				if p51.Scope and p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope).Visible == false then
+					if p51.ToolStance == "Aim" and p51.isEquipped == true then
+						local v424 = true;
+						for v425 = 1, #p51.CancelTables do
+							if p51.CancelTables[v425].Visible == true then
+								v424 = false;
+								break;
+							end;
+						end;
+						if not v424 then
+							if p51.ToolStance == "Ready" and p51.isEquipped == true then
+								local v426 = true;
+								for v427 = 1, #p51.CancelTables do
+									if p51.CancelTables[v427].Visible == true then
+										v426 = false;
+										break;
+									end;
+								end;
+								if v426 then
+									if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+										p51.sight.Reticle.PrismScopeGui.Enabled = true;
+									end;
+									if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+										local v428 = p51.viewModel:GetDescendants();
+										for v429 = 1, #v428 do
+											if v428[v429]:IsA("BasePart") and v428[v429].Name ~= "Reticle" then
+												v428[v429].Transparency = 1;
+											end;
+										end;
+										return;
+									else
+										return;
+									end;
+								else
+									if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+										p51.sight.Reticle.PrismScopeGui.Enabled = false;
+									end;
+									if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+										local v430 = p51.viewModel:GetDescendants();
+										for v431 = 1, #v430 do
+											if v430[v431]:IsA("BasePart") then
+												v430[v431].Transparency = v430[v431]:GetAttribute("OriginalTransparency");
+											end;
+										end;
+										return;
+									else
+										return;
+									end;
+								end;
+							else
+								if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+									p51.sight.Reticle.PrismScopeGui.Enabled = false;
+								end;
+								if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+									v430 = p51.viewModel:GetDescendants();
+									for v431 = 1, #v430 do
+										if v430[v431]:IsA("BasePart") then
+											v430[v431].Transparency = v430[v431]:GetAttribute("OriginalTransparency");
+										end;
+									end;
+									return;
+								else
+									return;
+								end;
+							end;
+						else
+							if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+								p51.sight.Reticle.PrismScopeGui.Enabled = true;
+							end;
+							if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+								v428 = p51.viewModel:GetDescendants();
+								for v429 = 1, #v428 do
+									if v428[v429]:IsA("BasePart") and v428[v429].Name ~= "Reticle" then
+										v428[v429].Transparency = 1;
+									end;
+								end;
+								return;
+							else
+								return;
+							end;
+						end;
+					elseif p51.ToolStance == "Ready" and p51.isEquipped == true then
+						v426 = true;
+						for v427 = 1, #p51.CancelTables do
+							if p51.CancelTables[v427].Visible == true then
+								v426 = false;
+								break;
+							end;
+						end;
+						if v426 then
+							if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+								p51.sight.Reticle.PrismScopeGui.Enabled = true;
+							end;
+							if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+								v428 = p51.viewModel:GetDescendants();
+								for v429 = 1, #v428 do
+									if v428[v429]:IsA("BasePart") and v428[v429].Name ~= "Reticle" then
+										v428[v429].Transparency = 1;
+									end;
+								end;
+								return;
+							else
+								return;
+							end;
+						else
+							if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+								p51.sight.Reticle.PrismScopeGui.Enabled = false;
+							end;
+							if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+								v430 = p51.viewModel:GetDescendants();
+								for v431 = 1, #v430 do
+									if v430[v431]:IsA("BasePart") then
+										v430[v431].Transparency = v430[v431]:GetAttribute("OriginalTransparency");
+									end;
+								end;
+								return;
+							else
+								return;
+							end;
+						end;
+					else
+						if p51.sight.Reticle:FindFirstChild("PrismScopeGui") then
+							p51.sight.Reticle.PrismScopeGui.Enabled = false;
+						end;
+						if not p51.mainGui.MainFrame.ScreenEffects.Scopes:FindFirstChild(p51.Scope):FindFirstChild("Sight") then
+							v430 = p51.viewModel:GetDescendants();
+							for v431 = 1, #v430 do
+								if v430[v431]:IsA("BasePart") then
+									v430[v431].Transparency = v430[v431]:GetAttribute("OriginalTransparency");
+								end;
+							end;
+							return;
+						else
+							return;
+						end;
+					end;
+				end;			
+			end;
+		end)();
+	end;
+	p51.SightCycleIndex = v410;
+end;
+function v1.inspect(p52)
+	if p52.WeldedTool and p52.reloading == false and p52.isAiming == false and p52.clientAnimationTracks.Inspect and not p52.clientAnimationTracks.Inspect.IsPlaying and not p52.useDebounce then
+		u2:PlaySoundV2(p52.WeldedTool.ItemRoot.Inspect, nil);
+		p52.clientAnimationTracks.Inspect:Play();
+		p52.serverAnimationTracks.Inspect:Play();
+	end;
+end;
+local l__VehicleInteractions__37 = game.ReplicatedStorage.Remotes.VehicleInteractions;
+function v1.toggleAttachmentExtra(p53)
+	if p53.weapon and p53.weapon:FindFirstChild("Attachments") and p53.weapon.Attachments:FindFirstChild("Extra") then
+		local v432 = p53.weapon.Attachments.Extra:FindFirstChildOfClass("StringValue");
+		if v432 then
+			local v433 = v432.ItemProperties.Attachment:GetAttribute("Active");
+			if v433 ~= nil then
+				local v434 = nil;
+				u2:PlaySoundV2(p53.WeldedTool.ItemRoot.FireSelector, nil, p53.SoundsTemp);
+				l__SoundServiceEvent__13:FireServer(p53.WeldedTool.ItemRoot.FireSelector);
+				v434 = v432.ItemProperties.Attachment:GetAttribute("ExtraType");
+				if v433 == true then
+					if v434 == "Laser" then
+						p53.laserActive = false;
+						if p53.laserDot ~= nil then
+							p53.Emitter = p53.viewModel.Item.Attachments.Extra:FindFirstChild(v432.Name).Emitter;
+							p53.Emitter.Transparency = 1;
+							p53.laserDot:Destroy();
+							p53.laserDot = nil;
+						end;
+					elseif v434 == "Flashlight" then
+						p53.flashLightActive = false;
+						p53.Emitter = p53.viewModel.Item.Attachments.Extra:FindFirstChild(v432.Name).Emitter;
+						p53.Emitter.Transparency = 1;
+						p53.Emitter.SpotLight.Enabled = false;
+					end;
+				elseif v434 == "Laser" then
+					p53.laserActive = true;
+				elseif v434 == "Flashlight" then
+					p53.flashLightActive = true;
+					p53.Emitter = p53.viewModel.Item.Attachments.Extra:FindFirstChild(v432.Name).Emitter;
+					p53.Emitter.SpotLight.Enabled = true;
+					coroutine.wrap(function()
+						while os.time() - os.time() < 6 do
+							wait();
+							local v435 = p53.character:GetChildren();
+							for v436 = 1, #v435 do
+								if v435[v436]:IsA("Model") and v435[v436].Name == p53.weapon.Name then
+									if v435[v436].Attachments:FindFirstChild("Extra") and v435[v436].Attachments.Extra:FindFirstChild(v432.Name) then
+										v435[v436].Attachments.Extra:FindFirstChild(v432.Name).Emitter.SpotLight.Enabled = false;
+									end;
+									break;
+								end;
+							end;						
+						end;
+					end)();
+				end;
+				l__ToggleAttachment__5:FireServer("Extra");
+				return;
+			end;
+		end;
+	elseif p53.rs_Player.Status.GameplayVariables.Vehicle.CurrentSeat.Value and p53.rs_Player.Status.GameplayVariables.Vehicle.CurrentSeat.Value.ClassName == "VehicleSeat" then
+		l__VehicleInteractions__37:FireServer({
+			Action = "HeadLights"
+		});
+	end;
+end;
+function v1.fovUpdate(p54, p55, p56, p57, p58)
+	if not p57 then
+		p57 = Enum.EasingStyle.Quad;
+	end;
+	if not p58 then
+		p58 = Enum.EasingDirection.Out;
+	end;
+	local v437 = {};
+	if p55 > 1 then
+		local v438 = p54.Scope and 65 / p55 or p54.baseFov / p55;
+	else
+		v438 = p54.baseFov / p55;
+	end;
+	v437.FieldOfView = v438;
+	l__TweenService__30:Create(l__CurrentCamera__8, TweenInfo.new(p56, p57, p58), v437):Play();
+end;
+local u38 = require(l__Modules__10:WaitForChild("NightVisionSystem"));
+function v1.ambientBoostUpdate(p59, p60, p61, p62, p63)
+	u38:SetScopeTarget(p60, p61, p62, p63);
+end;
+local function u39(p64)
+	if not l__ViewModels__3:FindFirstChild(p64.weapon.Name) then
+		return nil;
+	end;
+	local v439 = l__ViewModels__3:FindFirstChild(p64.weapon.Name):Clone();
+	v439.Parent = workspace.CurrentCamera;
+	v439.Name = "ViewModel";
+	local v440 = v439:GetDescendants();
+	for v441 = 1, #v440 do
+		if v440[v441]:IsA("BasePart") then
+			v440[v441].CollisionGroup = "ViewModel";
+			v440[v441].CastShadow = false;
+		end;
+	end;
+	v439:FindFirstChildOfClass("BodyColors").HeadColor3 = p64.character:FindFirstChildOfClass("BodyColors").HeadColor3;
+	v439:FindFirstChildOfClass("BodyColors").LeftArmColor3 = p64.character:FindFirstChildOfClass("BodyColors").LeftArmColor3;
+	v439:FindFirstChildOfClass("BodyColors").LeftLegColor3 = p64.character:FindFirstChildOfClass("BodyColors").LeftLegColor3;
+	v439:FindFirstChildOfClass("BodyColors").RightArmColor3 = p64.character:FindFirstChildOfClass("BodyColors").RightArmColor3;
+	v439:FindFirstChildOfClass("BodyColors").RightLegColor3 = p64.character:FindFirstChildOfClass("BodyColors").RightLegColor3;
+	v439:FindFirstChildOfClass("BodyColors").TorsoColor3 = p64.character:FindFirstChildOfClass("BodyColors").TorsoColor3;
+	v439.Clothing.ShirtTemplate = p64.character.Shirt.ShirtTemplate;
+	if p64.weapon.ItemProperties:GetAttribute("Skin") and p64.weapon.ItemProperties:GetAttribute("Skin") ~= "" then
+		u2:SkinItem(p64.weapon, v439.Item);
+	end;
+	u4(p64, v439);
+	return v439;
+end;
+local function u40(p65)
+	local v442 = u2:UpdateAttachments(p65.weapon, p65.viewModel.Item);
+	p65.sight = nil;
+	p65.barrel = nil;
+	if p65.viewModel.Item:FindFirstChild("Attachments") and p65.viewModel.Item.Attachments:FindFirstChild("Front") then
+		if p65.viewModel.Item.Attachments.Front:GetChildren()[1] then
+			p65.barrel = p65.viewModel.Item.Attachments.Front:GetChildren()[1].Barrel;
+		end;
+	elseif p65.viewModel.Item:FindFirstChild("Barrel") then
+		p65.barrel = p65.viewModel.Item.Barrel;
+	end;
+	local l__KeybindHints__443 = p65.mainGui.MainFrame.InteractionFrame.KeybindHints;
+	l__KeybindHints__443.ToggleAttachment.Visible = false;
+	if v442 then
+		if p65.viewModel.Item:FindFirstChild("RearSightUp") then
+			p65.viewModel.Item.RearSightUp.Transparency = 0;
+			p65.viewModel.Item.RearSightUp:SetAttribute("OriginalTransparency", 0);
+		end;
+		if p65.viewModel.Item:FindFirstChild("RearSightDown") then
+			p65.viewModel.Item.RearSightDown.Transparency = 1;
+			p65.viewModel.Item.RearSightDown:SetAttribute("OriginalTransparency", 1);
+		end;
+		for v444, v445 in pairs(v442) do
+			if v444 == "Sight" then
+				if p65.viewModel.Item.Attachments.Sight:FindFirstChild("AimPartDist") then
+					v445.AimPart.Position = v445.AimPart.Position + Vector3.new(0, 0, p65.viewModel.Item.Attachments.Sight.AimPartDist.Value);
+				end;
+				if p65.viewModel.Item.Attachments.Sight:FindFirstChild("AimPartDistX") then
+					v445.AimPart.Position = v445.AimPart.Position + Vector3.new(p65.viewModel.Item.Attachments.Sight.AimPartDistX.Value, 0, 0);
+				end;
+				local v446 = {
+					AimPart = v445.AimPart, 
+					Sight = v445, 
+					Scope = v445.PrimaryPart:FindFirstChild("Scope") and v445.Name, 
+					ReSizeScope = v445.PrimaryPart:FindFirstChild("ReSizeScope") and v445.PrimaryPart.ReSizeScope.Value, 
+					ReSizeScopeVector = v445.PrimaryPart:FindFirstChild("ReSizeScope") and v445.PrimaryPart.ReSizeScope.SizeVector.Value, 
+					ZoomAmount = p65.weapon.Attachments.Sight:FindFirstChild(v445.Name).ItemProperties.Attachment:GetAttribute("Zoom"), 
+					AmbientBoost = p65.weapon.Attachments.Sight:FindFirstChild(v445.Name).ItemProperties.Attachment:GetAttribute("AmbientBoost") and 0, 
+					NightVisionColor = p65.weapon.Attachments.Sight:FindFirstChild(v445.Name).ItemProperties.Attachment:GetAttribute("NightVisionColor") or Color3.new(1, 1, 1)
+				};
+				if p65.weapon.Attachments.Sight:FindFirstChild(v445.Name).ItemProperties.Attachment:GetAttribute("AllowIronSight") then
+					p65.aimParts[2] = p65.aimParts[1];
+					p65.aimParts[1] = v446;
+					p65.aimPart = p65.aimParts[1].AimPart;
+					p65.sight = p65.aimParts[1].Sight;
+					p65.Scope = p65.aimParts[1].Scope;
+					p65.ReSizeScope = p65.aimParts[1].ReSizeScope;
+					p65.ReSizeScopeVector = p65.aimParts[1].ReSizeScopeVector;
+					p65.zoomAmount = p65.aimParts[1].ZoomAmount;
+					p65.ambientBoost = p65.aimParts[1].AmbientBoost;
+					p65.nightVisionColor = p65.aimParts[1].NightVisionColor;
+				else
+					p65.aimParts[1] = v446;
+					p65.aimPart = p65.aimParts[1].AimPart;
+					p65.sight = p65.aimParts[1].Sight;
+					p65.Scope = p65.aimParts[1].Scope;
+					p65.ReSizeScope = p65.aimParts[1].ReSizeScope;
+					p65.ReSizeScopeVector = p65.aimParts[1].ReSizeScopeVector;
+					p65.zoomAmount = p65.aimParts[1].ZoomAmount;
+					p65.ambientBoost = p65.aimParts[1].AmbientBoost;
+					p65.nightVisionColor = p65.aimParts[1].NightVisionColor;
+				end;
+				if not v445.PrimaryPart:FindFirstChild("NoRail") and p65.viewModel.Item:FindFirstChild("SightRail") then
+					p65.viewModel.Item.SightRail.Transparency = 0;
+				end;
+				if p65.viewModel.Item:FindFirstChild("RearSightUp") then
+					p65.viewModel.Item.RearSightUp.Transparency = 1;
+					p65.viewModel.Item.RearSightUp:SetAttribute("OriginalTransparency", 1);
+				end;
+				if p65.viewModel.Item:FindFirstChild("RearSightDown") then
+					p65.viewModel.Item.RearSightDown.Transparency = 0;
+					p65.viewModel.Item.RearSightDown:SetAttribute("OriginalTransparency", 0);
+				end;
+			elseif v444 == "Muzzle" then
+				if v445:FindFirstChild("BarrelExtension") then
+					p65.barrel = v445:FindFirstChild("BarrelExtension");
+				end;
+			elseif v444 == "Extra" then
+				local v447 = p65.weapon.Attachments.Extra:FindFirstChildOfClass("StringValue");
+				local v448 = v447.ItemProperties.Attachment:GetAttribute("Active");
+				local v449 = v447.ItemProperties.Attachment:GetAttribute("ExtraType");
+				if v449 == "Laser" then
+					l__KeybindHints__443.ToggleAttachment.Frame.Decor.Text = "Laser";
+					l__KeybindHints__443.ToggleAttachment.Visible = true;
+				elseif v449 == "Flashlight" then
+					l__KeybindHints__443.ToggleAttachment.Frame.Decor.Text = "Light";
+					l__KeybindHints__443.ToggleAttachment.Visible = true;
+				end;
+				if v447 and v448 ~= nil then
+					if v448 == true then
+						if v449 == "Laser" then
+							p65.laserActive = true;
+						elseif v449 == "Flashlight" then
+							p65.flashLightActive = true;
+							p65.viewModel.Item.Attachments.Extra:FindFirstChild(v447.Name).Emitter.SpotLight.Enabled = true;
+							coroutine.wrap(function()
+								while os.time() - os.time() < 6 do
+									wait();
+									local v450 = p65.character:GetChildren();
+									for v451 = 1, #v450 do
+										if v450[v451]:IsA("Model") and v450[v451].Name == p65.weapon.Name then
+											if v450[v451].Attachments:FindFirstChild("Extra") and v450[v451].Attachments.Extra:FindFirstChild(v447.Name) then
+												v450[v451].Attachments.Extra:FindFirstChild(v447.Name).Emitter.SpotLight.Enabled = false;
+											end;
+											break;
+										end;
+									end;								
+								end;
+							end)();
+						end;
+					end;
+					l__ToggleAttachment__5:FireServer("Extra", true);
+				end;
+			end;
+		end;
+		local l__Attachments__452 = p65.weapon:FindFirstChild("Attachments");
+		if l__Attachments__452 then
+			local v453 = l__Attachments__452:GetChildren();
+			for v454 = 1, #v453 do
+				local l__Name__455 = v453[v454].Name;
+				if l__Name__455 == "Muzzle" or v453[v454].Name == "Sight" or v453[v454].Name == "Extra" then
+					p65.Connections[l__Name__455 .. "Added"] = p65.weapon.Attachments:FindFirstChild(l__Name__455).ChildAdded:Connect(function()
+						p65:equip(p65.weapon);
+					end);
+					p65.Connections[l__Name__455 .. "Removed"] = p65.weapon.Attachments:FindFirstChild(l__Name__455).ChildRemoved:Connect(function()
+						wait(0.05);
+						if p65.viewModel == p65.viewModel then
+							p65:equip(p65.weapon);
+						end;
+					end);
+				end;
+			end;
+			if p65.weapon.Attachments:FindFirstChild("Extra") then
+				local v456 = p65.weapon.Attachments.Extra:FindFirstChildOfClass("StringValue");
+				if v456 then
+					local v457 = v456.ItemProperties.Attachment:GetAttribute("ExtraType");
+					if v457 ~= "Laser" then
+						p65.laserActive = false;
+					elseif v457 ~= "FlashLight" then
+						p65.flashLightActive = true;
+					end;
+				else
+					p65.laserActive = false;
+					p65.flashLightActive = false;
+				end;
+			end;
+		end;
+		p65.Connections.ViewModelUpdate = l__UpdateViewmodel__6.OnClientEvent:Connect(function()
+			p65:equip(p65.weapon);
+		end);
+	end;
+end;
+local function u41(p66, p67)
+	if not p66.weapon:FindFirstChild("Attachments") or not p66.weapon.Attachments:FindFirstChild("Magazine") then
+		return;
+	end;
+	if p66.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue") then
+		if p67 then
+			local l__Name__458 = p66.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue").Name;
+			if l__Name__458 ~= "" then
+				u7(p66, l__Name__458);
+			end;
+		end;
+		return true;
+	end;
+	local v459 = p66.viewModel.Item.Attachments.Magazine:GetChildren();
+	for v460 = 1, #v459 do
+		v459[v460]:Destroy();
+	end;
+	return false;
+end;
+function v1.equip(p68, p69, p70)
+	if l__CurrentCamera__8.CameraSubject == p68.humanoid then
+		p68:unequip(true);
+		p68.weapon = p69;
+		p68.WeldedTool = p70 or p68.character:WaitForChild(p68.weapon.Name);
+		p68.WeldedTool:WaitForChild("ItemRoot");
+		p68.WeldedTool.ItemRoot:WaitForChild("Equip");
+		p68.itemProperties = p68.weapon.ItemProperties;
+		p68.MaxAmmo = 1;
+		p68.weaponInfo = l__RangedWeapons__9:FindFirstChild(p68.weapon.Name);
+		if p68.weaponInfo then
+			p68.ReloadLength = p68.weaponInfo:GetAttribute("ReloadLength") and 0;
+			p68.ReloadChamberLength = p68.weaponInfo:GetAttribute("ReloadChamberLength") and 0;
+			p68.ReloadNoMagLength = p68.weaponInfo:GetAttribute("ReloadNoMagLength") and 0;
+		end;
+		p68.settings = require(p68.weapon.SettingsModule);
+		p68.Operational = true;
+		if p68.weapon:FindFirstChild("Attachments") and p68.itemProperties:FindFirstChild("VitalParts") then
+			for v461, v462 in pairs((p68.itemProperties.VitalParts:GetAttributes())) do
+				if p68.weapon.Attachments:FindFirstChild(v461):FindFirstChildOfClass("StringValue") == nil then
+					p68.Operational = false;
+					break;
+				end;
+			end;
+		end;
+		p68.RightMouseDown = false;
+		p68.LeftMouseDown = false;
+		p68.lastUseTime = 0;
+		p68.timeSinceUse = 0;
+		p68.timeNow = 0;
+		p68.MouseHeldTime = 0;
+		p68.jump = 0;
+		p68.reAimDebunce = true;
+		p68.RecoilTValue = 0;
+		p68.RecoilReduction = 0;
+		p68.EquipTValue = p68.settings.EquipTValue and -75;
+		p68.firedInRow = 0;
+		p68.MouseHeld = false;
+		p68.Mouse2Held = false;
+		p68.reloading = false;
+		p68.cancellingReload = false;
+		p68.oldCamCF = nil;
+		p68.oldCamCF2 = nil;
+		p68.altUseCounter = 0;
+		p68.useDebounce = false;
+		p68.Bullets = 0;
+		p68.SoundsTemp = Instance.new("Folder");
+		p68.SoundsTemp.Parent = p68.mainGui;
+		p68.sight = nil;
+		p68.weaponOffSet = p68.settings.weaponOffSet;
+		p68.aimOffSet = CFrame.new();
+		p68.TempCFrame = nil;
+		p68.sprintOffSet = p68.settings.sprintOffSet or Vector3.new(1, 1, 1);
+		p68.AimInSpeed = p68.settings.AimInSpeed and 0.3;
+		p68.AimOutSpeed = p68.settings.AimOutSpeed and 0.3;
+		p68.swayMult = p68.settings.swayMult and 0.1;
+		p68.useDof = p68.settings.useDof and false;
+		p68.allowAiming = p68.settings.allowAiming and false;
+		p68.useModuleName = p68.settings.useModuleName;
+		p68.reloadType = p68.settings.reloadType;
+		p68.WeldHand = p68.settings.WeldHand and "RightHand";
+		p68.FireRate = p68.settings.FireRate and 0.1;
+		p68.FireModes = p68.settings.FireModes or { "" };
+		p68.FireModeIndex = 1;
+		p68.SightCycleIndex = 1;
+		if p68.weapon.ItemProperties:GetAttribute("FireModeIndexS") and typeof(p68.weapon.ItemProperties:GetAttribute("FireModeIndexS")) == "number" and p68.FireModes[p68.weapon.ItemProperties:GetAttribute("FireModeIndexS")] then
+			p68.FireModeIndex = p68.weapon.ItemProperties:GetAttribute("FireModeIndexS");
+			p68.weapon.ItemProperties:SetAttribute("FireMode", p68.FireModes[p68.FireModeIndex]);
+		elseif not p68.weapon.ItemProperties:GetAttribute("FireModeIndex") then
+			p68.weapon.ItemProperties:SetAttribute("FireModeIndex", p68.FireModeIndex);
+			p68.FireModeIndex = p68.FireModeIndex;
+			p68.weapon.ItemProperties:SetAttribute("FireMode", p68.FireModes[p68.FireModeIndex]);
+		else
+			p68.FireModeIndex = p68.weapon.ItemProperties:GetAttribute("FireModeIndex");
+			p68.weapon.ItemProperties:SetAttribute("FireMode", p68.FireModes[p68.FireModeIndex]);
+		end;
+		p68.Scope = p68.settings.Scope;
+		p68.ReSizeScope = p68.settings.ReSizeScope and 0;
+		p68.ReSizeScopeVector = p68.settings.ReSizeScopeVector and "Z";
+		p68.CycleTiming = p68.settings.CycleTiming;
+		p68.ReloadTiming = p68.settings.ReloadTiming;
+		p68.AimWhileActing = p68.settings.AimWhileActing and true;
+		p68.PlayRackSoundBeforeEnd = p68.settings.PlayRackSoundBeforeEnd and false;
+		p68.AimReadyTime = p68.settings.AimReadyTime and 0.4;
+		p68.ItemLength = p68.settings.ItemLength;
+		p68.TouchWallPosY = p68.settings.TouchWallPosY;
+		p68.TouchWallPosZ = p68.settings.TouchWallPosZ;
+		p68.TouchWallRotX = p68.settings.TouchWallRotX * 1.3;
+		p68.TouchWallRotY = p68.settings.TouchWallRotY * 1.3;
+		p68.RecoilPatternPos = 0;
+		p68.RecoilPatternRecoverySpeed = 0.5;
+		p68.MaximumKickBack = p68.settings.MaximumKickBack and 1;
+		p68.MaxRecoil = p68.settings.MaxRecoil and 4;
+		p68.ReductionStartTime = p68.settings.ReductionStartTime and 15;
+		p68.RecoilReductionMax = p68.settings.RecoilReductionMax and 1;
+		p68.RecoilTValueMax = p68.settings.RecoilTValueMax and 5;
+		p68.IdleSwayModifier = p68.settings.IdleSwayModifier;
+		p68.WalkSwayModifer = p68.settings.WalkSwayModifer;
+		p68.SprintSwayModifer = p68.settings.SprintSwayModifer;
+		p68.meleeHitEffect = p68.settings.meleeHitEffect and false;
+		p68.swingStartWait = p68.settings.swingStartWait and 0;
+		p68.swingEndWait = p68.settings.swingEndWait and 0;
+		p68.swingSpeedMod = p68.settings.swingSpeedMod and 0;
+		p68.clientAnimations = {};
+		p68.serverAnimations = {};
+		p68.clientAnimationTracks = {};
+		p68.serverAnimationTracks = {};
+		for v463, v464 in pairs(p68.settings.Animations.FirstPerson) do
+			local v465 = Instance.new("Animation");
+			v465.AnimationId = v464;
+			v465.Name = v463;
+			p68.clientAnimations[v463] = v465;
+		end;
+		for v466, v467 in pairs(p68.settings.Animations.ThirdPerson) do
+			local v468 = Instance.new("Animation");
+			v468.AnimationId = v467;
+			v468.Name = v466;
+			p68.serverAnimations[v466] = v468;
+		end;
+		p68.viewModel = u39(p68);
+		if p68.viewModel then
+			p68.aimPart = p68.viewModel:FindFirstChild("AimPart");
+			p68.aimParts = { {
+					AimPart = p68.viewModel:FindFirstChild("AimPart"), 
+					Sight = nil, 
+					Scope = nil, 
+					ReSizeScope = 0, 
+					ReSizeScopeVector = "Z", 
+					ZoomAmount = p68.itemProperties:FindFirstChild("Tool") and p68.itemProperties.Tool:GetAttribute("Zoom"), 
+					AmbientBoost = 0, 
+					NightVisionColor = Color3.new(1, 1, 1)
+				} };
+			if p68.viewModel:FindFirstChild("AimPartCanted") then
+				table.insert(p68.aimParts, {
+					AimPart = p68.viewModel:FindFirstChild("AimPartCanted"), 
+					Sight = nil, 
+					Scope = nil, 
+					ReSizeScope = 0, 
+					ReSizeScopeVector = "Z", 
+					ZoomAmount = p68.itemProperties:FindFirstChild("Tool") and p68.itemProperties.Tool:GetAttribute("Zoom"), 
+					AmbientBoost = 0, 
+					NightVisionColor = Color3.new(1, 1, 1)
+				});
+			end;
+			p68.aimPart = p68.aimParts[1].AimPart;
+			p68.zoomAmount = p68.aimParts[1].ZoomAmount;
+			p68.ambientBoost = p68.aimParts[1].AmbientBoost;
+			p68.nightVisionColor = p68.aimParts[1].NightVisionColor;
+			p68.barrel = p68.viewModel.Item:FindFirstChild("Barrel");
+			u40(p68);
+			if p68.weapon:FindFirstChild("Attachments") then
+				u22(p68);
+				if p68.weapon.Attachments:FindFirstChild("Magazine") then
+					u41(p68);
+					if p68.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue") then
+						p68.MaxAmmo = p68.weapon.Attachments.Magazine:FindFirstChildOfClass("StringValue").ItemProperties:GetAttribute("MaxLoadedAmmo");
+					end;
+					local v469 = p68.viewModel.Item.Attachments.Magazine:GetChildren()[1];
+					if v469 then
+						local l__Bullets__470 = p68.Bullets;
+						if v469:FindFirstChild("Bullet1") then
+							if l__Bullets__470 > 0 then
+								v469.Bullet1.Transparency = 0;
+							else
+								v469.Bullet1.Transparency = 1;
+							end;
+						end;
+						if v469:FindFirstChild("Bullet2") then
+							if l__Bullets__470 > 1 then
+								v469.Bullet2.Transparency = 0;
+							else
+								v469.Bullet2.Transparency = 1;
+							end;
+						end;
+					end;
+				else
+					p68.MaxAmmo = p68.weapon.ItemProperties:GetAttribute("MaxLoadedAmmo");
+				end;
+			end;
+			for v471, v472 in pairs((p68.viewModel:GetDescendants())) do
+				if v472:IsA("BasePart") then
+					v472.CastShadow = false;
+				end;
+			end;
+			p68.Connections.ClothingConnection1 = p68.rs_Player.Clothing.ChildAdded:Connect(function()
+				u4(p68, p68.viewModel);
+			end);
+			p68.Connections.ClothingConnection2 = p68.rs_Player.Clothing.ChildRemoved:Connect(function()
+				u4(p68, p68.viewModel);
+			end);
+			if p68.allowAiming and p68.aimPart then
+				p68.TempCFrame = p68.aimPart.TempCFrame;
+				p68.TempCFrame.Value = p68.weaponOffSet;
+			else
+				p68.TempCFrame = {};
+				p68.TempCFrame.Value = p68.weaponOffSet;
+			end;
+			if p68.viewModel.Item:FindFirstChild("AmmoTypes") then
+				local l__Value__473 = p68.weapon.ItemProperties.AmmoType.Value;
+				local v474 = p68.viewModel.Item.AmmoTypes:GetChildren();
+				for v475 = 1, #v474 do
+					v474[v475].Transparency = 1;
+				end;
+				p68.viewModel.Item.AmmoTypes:FindFirstChild(l__Value__473).Transparency = 0;
+				if p68.viewModel.Item:FindFirstChild("AmmoTypes2") then
+					local v476 = p68.viewModel.Item.AmmoTypes2:GetChildren();
+					for v477 = 1, #v476 do
+						v476[v477].Transparency = 1;
+					end;
+					p68.viewModel.Item.AmmoTypes2:FindFirstChild(l__Value__473).Transparency = 0;
+				end;
+			end;
+			local l__KeybindHints__478 = p68.mainGui.MainFrame.InteractionFrame.KeybindHints;
+			if #p68.FireModes > 1 then
+				l__KeybindHints__478.CycleFiremode.Visible = true;
+			end;
+			if #p68.aimParts > 1 then
+				l__KeybindHints__478.CycleSights.Visible = true;
+			end;
+			coroutine.wrap(function()
+				while os.time() - os.time() < 3 do
+					wait();
+					local v479 = p68.character:GetDescendants();
+					for v480 = 1, #v479 do
+						if v479[v480]:IsA("RopeConstraint") then
+							v479[v480]:Destroy();
+							break;
+						end;
+					end;				
+				end;
+			end)();
+			coroutine.wrap(function()
+				while os.time() - os.time() < 3 do
+					wait();
+					local v481 = p68.character:GetDescendants();
+					for v482 = 1, #v481 do
+						if v481[v482]:IsA("SurfaceGui") then
+							v481[v482]:Destroy();
+							break;
+						end;
+					end;				
+				end;
+			end)();
+		end;
+		if p68.viewModel then
+			for v483, v484 in pairs(p68.clientAnimations) do
+				p68.clientAnimationTracks[v483] = p68.viewModel.Humanoid.Animator:LoadAnimation(v484);
+				p68.clientAnimationTracks[v483].Name = v483;
+				p68.Connections.PlaySound = p68.clientAnimationTracks[v483]:GetMarkerReachedSignal("PlaySound"):Connect(function(p71)
+					local v485 = p68.WeldedTool.ItemRoot:FindFirstChild(p71);
+					l__SoundServiceEvent__13:FireServer(v485);
+					u2:PlaySoundV2(v485, nil, p68.SoundsTemp);
+				end);
+			end;
+		end;
+		for v486, v487 in pairs(p68.serverAnimations) do
+			p68.serverAnimationTracks[v486] = p68.humanoid.Animator:LoadAnimation(v487);
+			p68.serverAnimationTracks[v486].Name = v486;
+		end;
+		if p68.Bullets == 0 then
+			if p68.clientAnimationTracks.Empty then
+				p68.clientAnimationTracks.Empty:Play();
+			end;
+			if p68.serverAnimationTracks.Empty then
+				p68.serverAnimationTracks.Empty:Play();
+			end;
+		end;
+		if p68.clientAnimationTracks.BoltOpen then
+			p68.clientAnimationTracks.BoltOpen:Play();
+		end;
+		if p68.serverAnimationTracks.BoltOpen then
+			p68.serverAnimationTracks.BoltOpen:Play();
+		end;
+		if p68.viewModel then
+			if p68.clientAnimationTracks.Equip then
+				p68.clientAnimationTracks.Equip:Play(0);
+			end;
+			if p68.clientAnimationTracks.Idle then
+				p68.clientAnimationTracks.Idle:Play();
+			end;
+		end;
+		if p68.serverAnimationTracks.Equip then
+			p68.serverAnimationTracks.Equip:Play(0);
+		end;
+		if p68.serverAnimationTracks.Idle then
+			p68.serverAnimationTracks.Idle:Play();
+		end;
+		if p68.useModuleName == "BuildingPlanDefault" then
+			p68.player.PlayerGui.BuildingGui.Enabled = true;
+		elseif p68.useModuleName == "UpgradeDefault" then
+			p68.player.PlayerGui.UpgradeGui.Enabled = true;
+		elseif p68.useModuleName == "BoomboxDefault" then
+			p68.player.PlayerGui.MainGui.Fullscreen.Inventory.Radio.Visible = true;
+		end;
+		u2:PlaySoundV2(p68.WeldedTool.ItemRoot.Equip, nil, p68.SoundsTemp);
+		l__SoundServiceEvent__13:FireServer(p68.WeldedTool.ItemRoot.Equip);
+		p68.ToolStance = "Idle";
+		local l__viewModel__42 = p68.viewModel;
+		coroutine.wrap(function()
+			task.wait(0.05);
+			if l__viewModel__42 == p68.viewModel then
+				p68.isEquipped = true;
+			end;
+		end)();
+	end;
+end;
+function v1.unequip(p72, p73, p74)
+	p72.isEquipped = false;
+	p72.isAiming = false;
+	p72:fovUpdate(1, 0.3);
+	p72:ambientBoostUpdate(0, Color3.new(1, 1, 1), 0.1);
+	local l__KeybindHints__488 = p72.mainGui.MainFrame.InteractionFrame.KeybindHints;
+	l__KeybindHints__488.CycleFiremode.Visible = false;
+	l__KeybindHints__488.CycleSights.Visible = false;
+	l__KeybindHints__488.ToggleAttachment.Visible = false;
+	if p72.settings and not p73 and p72.settings.UnequipTime and p74 then
+		p72.EquipTilt.target = p72.settings.UnequipTValue and math.rad(p72.settings.UnequipTValue) or 0;
+		wait(p72.settings.UnequipTime);
+		if p72.viewModel ~= p72.viewModel then
+			return;
+		end;
+	end;
+	if p72.viewModel then
+		p72.viewModel:Destroy();
+	end;
+	local v489 = workspace.Camera:GetChildren();
+	for v490 = 1, #v489 do
+		if v489[v490].Name == "ViewModel" then
+			v489[v490]:Destroy();
+		end;
+	end;
+	if p72.SoundsTemp then
+		p72.SoundsTemp:Destroy();
+	end;
+	p72.WeldedTool = nil;
+	p72.useModuleName = nil;
+	p72.flashLightActive = false;
+	p72.laserActive = false;
+	if p72.laserDot then
+		p72.laserDot:Destroy();
+		p72.laserDot = nil;
+	end;
+	for v491, v492 in pairs(p72.Connections) do
+		p72.Connections[v491]:Disconnect();
+		p72.Connections[v491] = nil;
+	end;
+	for v493, v494 in pairs(p72.serverAnimationTracks) do
+		p72.serverAnimationTracks[v493]:Stop();
+	end;
+	if p72.Scope then
+
+	end;
+	p72.weapon = nil;
+end;
+function v1.sprint(p75, p76, p77)
+	p75.SprintButtonHeld = p76;
+	if p75.SprintButtonHeld == true then
+		if p75.ActionButtonHeld == false and p75.AltActionButtonHeld == false then
+			if p75.sprinting == false then
+				p75.sprinting = true;
+				p75:aim(false, nil);
+				p75:changeStance("Standing", true);
+			else
+				p75.sprinting = false;
+			end;
+		end;
+	elseif p75.GameplaySettings:GetAttribute("ToggleSprint") == false or p77 then
+		p75.sprinting = false;
+	end;
+	p75.rs_Player.Status.GameplayVariables.Sprinting:SetAttribute("Value", p75.sprinting);
+end;
+function v1.changeStance(p78, p79, p80)
+	if p79 == "Crouching" and not p78.rs_Vehicle.CurrentSeat.Value then
+		if p78.stance == "Standing" then
+			p78.stance = "Crouching";
+			p78:sprint(false, true);
+		else
+			p78.stance = "Standing";
+		end;
+	elseif p79 == "Standing" and (p78.GameplaySettings:GetAttribute("ToggleCrouch") == false or p80) then
+		p78.stance = "Standing";
+	end;
+	p78.rs_Player.Status.GameplayVariables:SetAttribute("Stance", p78.stance);
+end;
+local l__MovementState__43 = game.ReplicatedStorage.Remotes.MovementState;
+function v1.changeLean(p81, p82, p83)
+	if p82 == 0 and p81.lean == 0 then
+		return;
+	end;
+	if p82 == p81.lean then
+		local v495 = 0;
+	else
+		v495 = p82;
+	end;
+	p81.lean = v495;
+	p81.LeanAlpha.target = -p81.lean;
+	l__MovementState__43:FireServer("Leaning", p81.LeanAlpha.target);
+end;
+return v1;
